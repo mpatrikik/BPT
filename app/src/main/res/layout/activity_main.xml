@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_color"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <ImageView
+        android:id="@+id/logo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="5dp"
+        android:contentDescription="Logo"
+        android:src="@drawable/logo"
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHeight_percent="0.2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="ByciclePartsTracker"
+        android:textSize="14pt"
+        android:textColor="#6A6A6A"
+        android:textStyle="bold"
+        android:textAlignment="center"
+        android:fontFamily="@font/lalezar_regular"
+        app:layout_constraintTop_toBottomOf="@id/logo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/connect_strava_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="ByciclePartsTracker needs to connect to your Strava account for the best results."
+        android:textSize="7pt"
+        android:textColor="#FFFFFF"
+        android:textAlignment="center"
+        android:fontFamily="@font/lalezar_regular"
+        app:layout_constraintTop_toBottomOf="@id/title"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.9"
+        tools:ignore="HardcodedText,PxUsage" />
+
+    <ImageButton
+        android:id="@+id/connect_strava_button"
+        android:src="@drawable/connect_strava_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="15dp"
+        android:scaleType="fitCenter"
+        android:background="@null"
+        android:contentDescription="Connect with STRAVA"
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHeight_percent="0.06"
+        app:layout_constraintTop_toBottomOf="@id/connect_strava_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:ignore="HardcodedText" />
+
+    <TextView
+        android:id="@+id/manual_add_text"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="150dp"
+        android:text="For manual data adding, login or register a new account."
+        android:textSize="7pt"
+        android:textColor="#FFFFFF"
+        android:textAlignment="center"
+        android:fontFamily="@font/lalezar_regular"
+        app:layout_constraintTop_toBottomOf="@id/connect_strava_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="1"
+        tools:ignore="HardcodedText" />
+
+    <!-- ConstraintLayout to hold the login and register buttons -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintWidth_percent="0.9"
+        app:layout_constraintHeight_percent="0.1"
+        app:layout_constraintTop_toBottomOf="@id/manual_add_text"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="0dp">
+
+        <ImageButton
+            android:id="@+id/login_button"
+            android:src="@drawable/loginbutton"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="Login"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            app:layout_constraintWidth_percent="0.45"
+            app:layout_constraintHeight_percent="0.65"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:ignore="HardcodedText" />
+
+        <ImageButton
+            android:id="@+id/register_button"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:contentDescription="Registration"
+            android:background="@null"
+            android:scaleType="fitCenter"
+            android:src="@drawable/regibutton"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.65"
+            app:layout_constraintWidth_percent="0.45"
+            app:layout_constraintTop_toTopOf="parent"
+
+            tools:ignore="HardcodedText" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

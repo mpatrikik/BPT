@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Bycicl Parts Tracker</string>
+    <string name="login_prompt">Already have an account? <a href="#">Login here</a>!</string>
+</resources>

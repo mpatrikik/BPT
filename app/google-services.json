@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "333292078285",
+    "firebase_url": "https://byciclepartstracker-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "byciclepartstracker",
+    "storage_bucket": "byciclepartstracker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:333292078285:android:b34b364570b2d908da1584",
+        "android_client_info": {
+          "package_name": "com.example.bpt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBanJ1nKmmBePT3R9PtzF_3e7jbb6Ujnd4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
