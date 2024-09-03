@@ -53,10 +53,12 @@ public class LoginActivity extends AppCompatActivity {
             }
         };
 
+
         int start = text.indexOf("Register here!");
         int end = start + "Register here!".length();
         spannableString.setSpan(clickableSpan, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
+        //git push
         registerRedirect.setText(spannableString);
         registerRedirect.setMovementMethod(LinkMovementMethod.getInstance());
 
