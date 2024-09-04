@@ -66,8 +66,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bicycle_spinner"/>
 
+    <!--<DatePicker
+        android:layout_width="232dp"
+        android:layout_height="78dp"
+        tools:layout_editor_absoluteX="16dp"
+        tools:layout_editor_absoluteY="378dp" />
+        -->
+
     <EditText
-        android:id="@+id/distance"
+        android:id="@+id/ridden_distance"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
@@ -75,6 +82,19 @@
         android:hint="Distance"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ride_details"
+        app:layout_constraintWidth_percent="0.22" />
+
+    <EditText
+        android:id="@+id/ridden_time"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginTop="5dp"
+        android:hint="Time"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.406"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/ride_details"
         app:layout_constraintWidth_percent="0.22" />
