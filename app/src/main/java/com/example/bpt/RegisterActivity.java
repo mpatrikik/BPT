@@ -84,6 +84,7 @@ public class RegisterActivity extends AppCompatActivity {
         return pattern.matcher(password).matches();
     }
 
+
     private void registerUser(String username, String password) {
         mAuth.createUserWithEmailAndPassword(username + "@example.com", password)
                 .addOnCompleteListener(this, task -> {
