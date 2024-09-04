@@ -11,6 +11,23 @@
     tools:context=".AccountActivity"
     tools:ignore="HardcodedText">
 
+    <ImageButton
+        android:id="@+id/home_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="4dp"
+        android:background="@null"
+        android:scaleType="fitCenter"
+        android:contentDescription="Logo"
+        android:src="@drawable/home_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.1"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintHorizontal_bias="0.03"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+         />
+
     <ImageView
         android:id="@+id/logo"
         android:layout_width="0dp"
@@ -28,7 +45,7 @@
         android:id="@+id/greeting_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hi xyz!"
+        android:text="Hi user!"
         android:textSize="20pt"
         android:fontFamily="@font/lalezar_regular"
         android:textStyle="bold"

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +32,13 @@ public class AccountActivity extends AppCompatActivity {
             }
         });
 
+
+        ImageButton homeButton = findViewById(R.id.home_button);
+
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void logoutUser() {
@@ -46,4 +54,6 @@ public class AccountActivity extends AppCompatActivity {
         startActivity(intent);
         finish();
     }
+
+
 }
