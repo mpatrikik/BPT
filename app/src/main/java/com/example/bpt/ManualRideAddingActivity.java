@@ -8,8 +8,13 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.os.Bundle;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -21,6 +26,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class ManualRideAddingActivity extends AppCompatActivity {
 
@@ -28,6 +34,8 @@ public class ManualRideAddingActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
     private String userId;
     private DatabaseReference mDatabase;
+    private TextView datePickerTextView;
+    private TextView timePickerTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,12 +44,22 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
+        ImageButton homeButton = findViewById(R.id.home_button);
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            startActivity(intent);
+        });
+
         Spinner bicycleSpinner = findViewById(R.id.bicycle_spinner);
         bicycleList = new ArrayList<>();
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bicycleSpinner.setAdapter(adapter);
+
+        datePickerTextView = findViewById(R.id.date_picker);
+        timePickerTextView = findViewById(R.id.time_picker);
+
 
         // Ellenőrizzük a bejelentkezett felhasználót
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -73,6 +91,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+
     }
 
     private void checkAndCreateUser(String userId) {
@@ -178,4 +197,33 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             this.bicycles = bicycles;
         }
     }
+
+    public void showDatePicker(View view) {
+        final Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this,
+                (view1, selectedYear, selectedMonth, selectedDay) -> {
+                    String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
+                    datePickerTextView.setText(selectedDate);
+                }, year, month, day);
+        datePickerDialog.show();
+    }
+
+    public void showTimePicker(View view) {
+        final Calendar calendar = Calendar.getInstance();
+        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+                (view12, selectedHour, selectedMinute) -> {
+                    String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
+                    timePickerTextView.setText(selectedTime);
+                }, hour, minute, true);
+        timePickerDialog.show();
+    }
+
+
 }
