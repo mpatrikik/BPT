@@ -2,48 +2,50 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.method.LinkMovementMethod;
-import android.text.style.ClickableSpan;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class DashboardActivity extends AppCompatActivity {
+
+    private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
+    private RecyclerView recyclerViewBikes;
+    private ItemAdapter adapterbikes;
+    private List<String> bikeList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
+
         // Recycler view for bikes
-        RecyclerView recyclerViewBikes = findViewById(R.id.recycler_view_bikes);
+        recyclerViewBikes = findViewById(R.id.recycler_view_bikes);
         recyclerViewBikes.setLayoutManager(new LinearLayoutManager(this));
 
-        List<String> itemsbikes = Arrays.asList("Bike 1", "Bike 2", "Bike 3");
-        ItemAdapter adapterbikes = new ItemAdapter(itemsbikes);
+        bikeList = new ArrayList<>();
+        adapterbikes = new ItemAdapter(bikeList);
         recyclerViewBikes.setAdapter(adapterbikes);
 
+        loadBikes();
 
         //Recycler view for parts
         RecyclerView recyclerViewParts = findViewById(R.id.recycler_view_parts);
@@ -63,19 +65,39 @@ public class DashboardActivity extends AppCompatActivity {
         ItemAdapter adapterrides = new ItemAdapter(itemsrides);
         recyclerViewRides.setAdapter(adapterrides);
 
-
+        //Account button
         ImageButton accountButton = findViewById(R.id.account_button);
-
         accountButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, AccountActivity.class);
             startActivity(intent);
         });
 
+        //Manual ride adding button
         ImageButton manualRideAddingButton = findViewById(R.id.manual_ride_adding_button);
-
         manualRideAddingButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void loadBikes() {
+        String userId = mAuth.getCurrentUser().getUid();  // Get current user ID
+        mDatabase.child("users").child(userId).child("bicycles")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        bikeList.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String bikeName = snapshot.getValue(String.class);
+                            bikeList.add(bikeName);
+                        }
+                        adapterbikes.notifyDataSetChanged();
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("DashboardActivity", "Failde to load bikes: ", databaseError.toException());
+                        Toast.makeText(DashboardActivity.this, "Error loading bikes", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }

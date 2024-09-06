@@ -73,7 +73,7 @@
         android:id="@+id/horizontal_line1"
         android:layout_width="0dp"
         android:layout_height="2dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="30dp"
         android:background="#808080"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -169,38 +169,35 @@
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:background="#66000000"/>
-
     </LinearLayout>
 
 
-    <EditText
-        android:id="@+id/ridden_distance"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="30dp"
-        android:hint="Distance"
-        android:gravity="center"
-        android:fontFamily="@font/averagesans_regular"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/date_time_picker"
-        app:layout_constraintWidth_percent="0.22" />
+    <LinearLayout
+        android:id="@+id/distance_time_section"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:layout_marginTop="20dp"
+        app:layout_constraintHeight_percent="0.05"
+        app:layout_constraintTop_toBottomOf="@id/date_time_picker">
 
     <EditText
-        android:id="@+id/ridden_time"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="30dp"
+        android:id="@+id/ridden_distance_input"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:hint="Distance"
+        android:gravity="center"
+        android:fontFamily="@font/averagesans_regular" />
+
+    <EditText
+        android:id="@+id/ridden_time_input"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
         android:hint="Time"
         android:gravity="center"
-        android:fontFamily="@font/averagesans_regular"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.764"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/date_time_picker"
-        app:layout_constraintWidth_percent="0.22" />
+        android:fontFamily="@font/averagesans_regular" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
