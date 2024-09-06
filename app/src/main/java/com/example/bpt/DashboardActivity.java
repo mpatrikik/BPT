@@ -9,6 +9,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -28,14 +29,19 @@ public class DashboardActivity extends AppCompatActivity {
     private RecyclerView recyclerViewBikes;
     private ItemAdapter adapterbikes;
     private List<String> bikeList;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        //swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
+
+        loadBikes();
 
         // Recycler view for bikes
         recyclerViewBikes = findViewById(R.id.recycler_view_bikes);
@@ -45,7 +51,12 @@ public class DashboardActivity extends AppCompatActivity {
         adapterbikes = new ItemAdapter(bikeList);
         recyclerViewBikes.setAdapter(adapterbikes);
 
-        loadBikes();
+        //SwipeRefreshLayout settings
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadBikes();
+            swipeRefreshLayout.setRefreshing(false);
+        });
+
 
         //Recycler view for parts
         RecyclerView recyclerViewParts = findViewById(R.id.recycler_view_parts);
@@ -54,8 +65,6 @@ public class DashboardActivity extends AppCompatActivity {
         List<String> itemsparts = Arrays.asList("Part 1", "Part 2", "Part 3");
         ItemAdapter adapterparts = new ItemAdapter(itemsparts);
         recyclerViewParts.setAdapter(adapterparts);
-
-
 
         //Recycler view for rides
         RecyclerView recyclerViewRides = findViewById(R.id.recycler_view_rides);
