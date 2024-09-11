@@ -13,16 +13,19 @@ import android.widget.Spinner;
 import android.widget.Toast;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
-import android.os.Bundle;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,12 +38,14 @@ public class ManualRideAddingActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private TextView datePickerTextView;
     private TextView timePickerTextView;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manualrideadding);
 
+        mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         ImageButton homeButton = findViewById(R.id.home_button);
@@ -58,6 +63,9 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
         datePickerTextView = findViewById(R.id.date_picker);
         timePickerTextView = findViewById(R.id.time_picker);
+
+        ImageButton submitButton = findViewById(R.id.manual_ride_adding_button_submit);
+        submitButton.setOnClickListener(v -> saveRide());
 
 
         // Ellenőrizzük a bejelentkezett felhasználót
@@ -90,7 +98,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-
     }
 
     private void checkAndCreateUser(String userId) {
@@ -118,7 +125,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             Toast.makeText(this, "User ID is null. Cannot load bicycles.", Toast.LENGTH_SHORT).show();
             return;
         }
-
         mDatabase.child("users").child(userId).child("bicycles").get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 bicycleList.clear();
@@ -224,5 +230,65 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         timePickerDialog.show();
     }
 
+    private void saveRide() {
+        String selectedBicycle = ((Spinner) findViewById(R.id.bicycle_spinner)).getSelectedItem().toString();
+        String rideTitle = ((EditText) findViewById(R.id.title_of_ride)).getText().toString();
+        String date = ((TextView) findViewById(R.id.date_picker)).getText().toString();
+        String time = ((TextView) findViewById(R.id.time_picker)).getText().toString();
+        String distance = ((EditText) findViewById(R.id.ridden_distance_input)).getText().toString();
+
+        // Ride ID létrehozása
+        String userId = mAuth.getCurrentUser().getUid();
+        String rideId = mDatabase.child("users").child(userId).child("rides").push().getKey();
+
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (!dataSnapshot.hasChild("bicycles")) {
+                    // Ha nincs meg a bicycles séma, hozzuk létre
+                    mDatabase.child("users").child(userId).child("bicycles").setValue(new ArrayList<>());
+                }
+                if (!dataSnapshot.hasChild("rides")) {
+                    // Ha nincs meg a rides séma, hozzuk létre
+                    mDatabase.child("users").child(userId).child("rides").setValue(new ArrayList<>());
+                }
+
+                // Ride adatok mentése
+                Ride ride = new Ride(selectedBicycle, rideTitle, date, time, distance);
+                mDatabase.child("users").child(userId).child("rides").child(rideId).setValue(ride)
+                        .addOnCompleteListener(task -> {
+                            if (task.isSuccessful()) {
+                                Toast.makeText(ManualRideAddingActivity.this, "Ride saved successfully", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(ManualRideAddingActivity.this, "Failed to save ride", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("ManualRideAddingActivity", "Failed to load bikes: ", databaseError.toException());
+                Toast.makeText(ManualRideAddingActivity.this, "Error loading bikes", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    class Ride {
+        public String selectedBicycle;
+        public String rideTitle;
+        public String date;
+        public String time;
+        public String distance;
+
+        public Ride(){}
+
+        public Ride(String selectedBicycle, String rideTitle, String date, String time, String distance){
+            this.selectedBicycle = selectedBicycle;
+            this.rideTitle = rideTitle;
+            this.date = date;
+            this.time = time;
+            this.distance = distance;
+        }
+    }
 
 }
