@@ -290,5 +290,4 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             this.distance = distance;
         }
     }
-
 }

@@ -10,34 +10,47 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
-    private List<String> items;
+    private List<DashboardActivity.Ride> rides;
 
-    public ItemAdapter(List<String> items) {
-        this.items = items;
+    public ItemAdapter(List<DashboardActivity.Ride> rides) {
+        this.rides = rides;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_ride, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.textView.setText(items.get(position));
+        DashboardActivity.Ride ride = rides.get(position);
+        holder.bicycleTextView.setText("Bicycle: " + ride.getSelectedBicycle());
+        holder.titleTextView.setText("Title: " + ride.getRideTitle());
+        holder.dateTextView.setText("Date: " + ride.getDate());
+        holder.timeTextView.setText("Time: " + ride.getTime());
+        holder.distanceTextView.setText("Distance: " + ride.getDistance() + " km");
     }
 
     @Override
     public int getItemCount() {
-        return items.size();
+        return rides.size();
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView textView;
+        public TextView bicycleTextView;
+        public TextView titleTextView;
+        public TextView dateTextView;
+        public TextView timeTextView;
+        public TextView distanceTextView;
 
         public ViewHolder(View view) {
             super(view);
-            textView = view.findViewById(android.R.id.text1);
+            bicycleTextView = view.findViewById(R.id.bicycle_text_view);
+            titleTextView = view.findViewById(R.id.title_text_view);
+            dateTextView = view.findViewById(R.id.date_text_view);
+            timeTextView = view.findViewById(R.id.time_text_view);
+            distanceTextView = view.findViewById(R.id.distance_text_view);
         }
     }
 }
