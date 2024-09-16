@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.content.Intent;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageButton;
 
@@ -14,31 +15,32 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.Transaction;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
-    private FirebaseFirestore db;
+    private DatabaseReference mDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
         SharedPreferences preferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
         boolean isLoggedIn = preferences.getBoolean("isLoggedIn", false);
 
         if (isLoggedIn) {
-            Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
-            startActivity(intent);
-            finish(); // MainActivity lezárása, hogy ne lehessen visszalépni ide
-        }
-
-        else {
+            checkUserDataAndRedirect();
+        } else {
             // Ha nincs bejelentkezve, mutassuk meg a bejelentkezési képernyőt
             setContentView(R.layout.activity_main);
 
@@ -72,4 +74,40 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
+    private void checkUserDataAndRedirect() {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+
+        if (currentUser == null) {
+            // Ha nincs bejelentkezve a felhasználó, küldd a bejelentkezési vagy regisztrációs oldalra
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(intent);
+            finish(); // MainActivity bezárása
+            return; // Itt fejezd be a metódus futását, hogy ne folytassa az ellenőrzést
+        }
+
+        String userId = currentUser.getUid();
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists() && dataSnapshot.hasChild("bicycles")) {
+                    // Ha van adat, irányítsd a Dashboardra
+                    Intent intent = new Intent(MainActivity.this, DashboardActivity.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    // Ha nincs adat, irányítsd a regisztrációs oldalra
+                    Intent intent = new Intent(MainActivity.this, RegisterActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.e(TAG, "Failed to read user data", databaseError.toException());
+            }
+        });
+    }
+
 }

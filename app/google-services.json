@@ -1,14 +1,14 @@
 {
   "project_info": {
-    "project_number": "333292078285",
-    "firebase_url": "https://byciclepartstracker-default-rtdb.europe-west1.firebasedatabase.app",
-    "project_id": "byciclepartstracker",
-    "storage_bucket": "byciclepartstracker.appspot.com"
+    "project_number": "941297395743",
+    "firebase_url": "https://bicyclepartstracker-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "bicyclepartstracker",
+    "storage_bucket": "bicyclepartstracker.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:333292078285:android:b34b364570b2d908da1584",
+        "mobilesdk_app_id": "1:941297395743:android:92ffde360801ff32048d2a",
         "android_client_info": {
           "package_name": "com.example.bpt"
         }
@@ -16,7 +16,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBanJ1nKmmBePT3R9PtzF_3e7jbb6Ujnd4"
+          "current_key": "AIzaSyDxGeLNJP8N-r9lSJns-Fi_fdA9TM89WWE"
         }
       ],
       "services": {
