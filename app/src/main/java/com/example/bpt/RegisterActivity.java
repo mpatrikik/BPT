@@ -98,6 +98,7 @@ public class RegisterActivity extends AppCompatActivity {
                             userData.put("username", username);
                             userData.put("password", password); // Nem javasolt jelszót plain text-ben tárolni!
                             userData.put("bicycles", new HashMap<>()); // Üres kerékpár lista
+                            userData.put("rides", new HashMap<>()); // Üres edzés lista
 
                             mDatabase.child("users").child(userId).setValue(userData)
                                     .addOnSuccessListener(aVoid -> {

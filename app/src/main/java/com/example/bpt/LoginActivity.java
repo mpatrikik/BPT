@@ -23,6 +23,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.DataSnapshot;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
 public class LoginActivity extends AppCompatActivity {
 
     private static final String TAG = "LoginActivity";
@@ -81,15 +85,68 @@ public class LoginActivity extends AppCompatActivity {
                     if (task.isSuccessful()) {
                         FirebaseUser user = mAuth.getCurrentUser();
                         if (user != null) {
-                            loadUserData(user.getUid());
+                            // Ha sikeres a bejelentkezés, ellenőrizzük, hogy van-e adat az adatbázisban
+                            checkUserInDatabase(user.getUid(), username, password);
                         } else {
-                            showError("Authentication failed");
+                            showError("Authentication failed.");
                         }
-                    } else{
-                            showError("Authentication failed");
-                        }
+                    } else {
+                        showError("Authentication failed.");
+                    }
                 });
     }
+
+    private void checkUserInDatabase(String userId, String username, String password) {
+        mDatabase.child("users").child(userId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DataSnapshot snapshot = task.getResult();
+                if (!snapshot.exists()) {
+                    // Ha nincs adat, akkor létrehozzuk az alapértelmezett adatokat
+                    createNewUserInDatabase(userId, username, password);
+                }
+                // Az adatbázisban már létezik adat vagy most hoztuk létre, továbbítjuk a DashboardActivity-re
+                saveUserAndRedirect(username);
+            } else {
+                showError("Failed to check user data.");
+            }
+        });
+    }
+
+
+    private void createNewUserInDatabase(String userId, String username, String password) {
+        // Létrehozunk egy Map-et a felhasználói adatok tárolására
+        Map<String, Object> userData = new HashMap<>();
+        userData.put("username", username);  // A felhasználó neve
+        userData.put("password", password);  // A jelszóű
+        userData.put("bicycles", new ArrayList<>());  // Üres kerékpár lista
+        userData.put("rides", new ArrayList<>());  // Üres edzés lista
+
+        // Feltöltjük az adatokat az adatbázisba
+        mDatabase.child("users").child(userId).setValue(userData)
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        showError("Failed to create user data.");
+                    }
+                });
+    }
+
+
+    private void saveUserAndRedirect(String username) {
+        // Mentjük a felhasználói adatokat SharedPreferences-be
+        SharedPreferences preferences = getSharedPreferences("MyAppPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean("isLoggedIn", true);
+        editor.putString("username", username); // A felhasználónév mentése
+        editor.apply();
+
+        // Továbbirányítás a DashboardActivity-re
+        Intent intent = new Intent(LoginActivity.this, DashboardActivity.class);
+        startActivity(intent);
+        finish();
+    }
+
+
+
 
     private void loadUserData(String userId) {
         mDatabase.child("users").child(userId).get().addOnCompleteListener(task -> {
