@@ -43,10 +43,11 @@
 
         <activity
             android:name=".ManualRideAddingActivity">
-
         </activity>
 
-
+        <activity
+            android:name=".PartsAddingActivity">
+        </activity>
     </application>
 
 </manifest>

@@ -90,6 +90,13 @@ public class DashboardActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             startActivity(intent);
         });
+
+        //Add parts button
+        ImageButton addPartsButton = findViewById(R.id.add_parts_button);
+        addPartsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, PartsAddingActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void loadBikes() {

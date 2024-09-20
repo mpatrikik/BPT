@@ -141,7 +141,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         });
     }
 
-    // Új kerékpár hozzáadása
     private void addNewBicycleToDatabase(String bicycleName) {
         if (userId == null) {
             Toast.makeText(this, "User ID is null. Cannot add bicycle.", Toast.LENGTH_SHORT).show();
@@ -259,6 +258,9 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
                                 Toast.makeText(ManualRideAddingActivity.this, "Ride saved successfully", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(ManualRideAddingActivity.this, DashboardActivity.class);
+                                startActivity(intent);
+                                finish();
                             } else {
                                 Toast.makeText(ManualRideAddingActivity.this, "Failed to save ride", Toast.LENGTH_SHORT).show();
                             }
