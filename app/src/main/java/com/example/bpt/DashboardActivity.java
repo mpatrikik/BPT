@@ -63,12 +63,6 @@ public class DashboardActivity extends AppCompatActivity {
         loadBikes();
         loadRides();
 
-        //Recycler view for parts
-//        RecyclerView recyclerViewParts = findViewById(R.id.recycler_view_parts);
-//        recyclerViewParts.setLayoutManager(new LinearLayoutManager(this));
-//        List<String> itemsparts = Arrays.asList("Part 1", "Part 2", "Part 3");
-//        ItemAdapter adapterparts = new ItemAdapter(itemsparts);
-//        recyclerViewParts.setAdapter(adapterparts);
 
         //SwipeRefreshLayout settings
         swipeRefreshLayout.setOnRefreshListener(() -> {

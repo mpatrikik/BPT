@@ -48,6 +48,7 @@
         <activity
             android:name=".PartsAddingActivity">
         </activity>
+
     </application>
 
 </manifest>

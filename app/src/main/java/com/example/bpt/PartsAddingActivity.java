@@ -1,7 +1,6 @@
 package com.example.bpt;
 
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,7 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-class PartsAddingActivity extends AppCompatActivity {
+public class PartsAddingActivity extends AppCompatActivity {
 
     private EditText partNameEditText, partTypeEditText;
     private Button addPartButton;
@@ -62,14 +61,35 @@ class PartsAddingActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bicycleSpinner.setAdapter(adapter);
 
+        checkAndCreatePartsNode();
+
         // Load bicycles from Firebase
         loadBicycles();
 
         // Set up the "Add Part" button
-        addPartButton.setOnClickListener(new View.OnClickListener() {
+        addPartButton.setOnClickListener(v -> addPartToDatabase());
+    }
+
+    private void checkAndCreatePartsNode() {
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
-            public void onClick(View v) {
-                addPartToDatabase();
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // If "parts" node doesn't exist, create it
+                if (!dataSnapshot.hasChild("parts")) {
+                    mDatabase.child("users").child(userId).child("parts").setValue(new ArrayList<>())
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(PartsAddingActivity.this, "Parts section created in database.", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Toast.makeText(PartsAddingActivity.this, "Failed to create parts section.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(PartsAddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
