@@ -3,10 +3,7 @@ package com.example.bpt;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,7 +19,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class DashboardActivity extends AppCompatActivity {
@@ -88,7 +84,7 @@ public class DashboardActivity extends AppCompatActivity {
         //Add parts button
         ImageButton addPartsButton = findViewById(R.id.add_parts_button);
         addPartsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, PartsAddingActivity.class);
+            Intent intent = new Intent(this, PartsaddingActivity.class);
             startActivity(intent);
         });
     }

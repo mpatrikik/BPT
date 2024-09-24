@@ -20,7 +20,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 
-public class PartsAddingActivity extends AppCompatActivity {
+public class PartsaddingActivity extends AppCompatActivity {
 
     private EditText partNameEditText, partTypeEditText;
     private Button addPartButton;
@@ -79,9 +79,9 @@ public class PartsAddingActivity extends AppCompatActivity {
                     mDatabase.child("users").child(userId).child("parts").setValue(new ArrayList<>())
                             .addOnCompleteListener(task -> {
                                 if (task.isSuccessful()) {
-                                    Toast.makeText(PartsAddingActivity.this, "Parts section created in database.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(PartsaddingActivity.this, "Parts section created in database.", Toast.LENGTH_SHORT).show();
                                 } else {
-                                    Toast.makeText(PartsAddingActivity.this, "Failed to create parts section.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(PartsaddingActivity.this, "Failed to create parts section.", Toast.LENGTH_SHORT).show();
                                 }
                             });
                 }
@@ -89,7 +89,7 @@ public class PartsAddingActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(PartsAddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(PartsaddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -110,7 +110,7 @@ public class PartsAddingActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Toast.makeText(PartsAddingActivity.this, "Failed to load bicycles", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PartsaddingActivity.this, "Failed to load bicycles", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -134,10 +134,10 @@ public class PartsAddingActivity extends AppCompatActivity {
         mDatabase.child("users").child(userId).child("parts").child(partId).setValue(part)
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Toast.makeText(PartsAddingActivity.this, "Part added successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PartsaddingActivity.this, "Part added successfully", Toast.LENGTH_SHORT).show();
                         finish(); // Go back to the previous activity (e.g. Dashboard)
                     } else {
-                        Toast.makeText(PartsAddingActivity.this, "Failed to add part", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PartsaddingActivity.this, "Failed to add part", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
