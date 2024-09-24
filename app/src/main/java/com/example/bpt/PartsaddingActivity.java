@@ -1,9 +1,10 @@
 package com.example.bpt;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.EditText;;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -19,14 +20,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PartsaddingActivity extends AppCompatActivity {
 
-    private EditText partNameEditText, partTypeEditText;
-    private Button addPartButton;
-    private Spinner bicycleSpinner;
-    private ArrayList<String> bicycleList;
-    private ArrayAdapter<String> adapter;
+    private Spinner bicycleSpinner, partTypeSpinner;
+    private ArrayList<String> bicycleList, partTypeList;
+    private ArrayAdapter<String> bicycleAdapter, partTypeAdapter;
+    private ImageButton addPartButton;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private String userId;
@@ -50,21 +51,32 @@ public class PartsaddingActivity extends AppCompatActivity {
         userId = currentUser.getUid();
 
         // Initialize UI elements
-        partNameEditText = findViewById(R.id.part_name_edittext);
-        partTypeEditText = findViewById(R.id.part_type_edittext);
-        addPartButton = findViewById(R.id.add_part_button);
         bicycleSpinner = findViewById(R.id.bicycle_spinner);
+        partTypeSpinner = findViewById(R.id.part_type_spinner);
+        addPartButton = findViewById(R.id.add_part_button);
         bicycleList = new ArrayList<>();
+        partTypeList = new ArrayList<>(Arrays.asList("Brake", "Chain", "Handlebar", "Tire", "Saddle"));
 
-        // Set up the adapter for the spinner
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        bicycleSpinner.setAdapter(adapter);
+        // Set up the adapter for the bicycle spinner
+        bicycleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
+        bicycleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        bicycleSpinner.setAdapter(bicycleAdapter);
+
+        // Set up the adapter for the part type spinner
+        partTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, partTypeList);
+        partTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        partTypeSpinner.setAdapter(partTypeAdapter);
 
         checkAndCreatePartsNode();
 
         // Load bicycles from Firebase
         loadBicycles();
+
+        ImageButton homeButton = findViewById(R.id.home_button);
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            startActivity(intent);
+        });
 
         // Set up the "Add Part" button
         addPartButton.setOnClickListener(v -> addPartToDatabase());
@@ -105,7 +117,7 @@ public class PartsaddingActivity extends AppCompatActivity {
                             String bicycleName = snapshot.getValue(String.class);
                             bicycleList.add(bicycleName);
                         }
-                        adapter.notifyDataSetChanged(); // Update the spinner with the new data
+                        bicycleAdapter.notifyDataSetChanged(); // Update the spinner with the new data
                     }
 
                     @Override
@@ -118,10 +130,10 @@ public class PartsaddingActivity extends AppCompatActivity {
     private void addPartToDatabase() {
         // Get selected bicycle and part details from input fields
         String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
-        String partName = partNameEditText.getText().toString().trim();
-        String partType = partTypeEditText.getText().toString().trim();
+        String partName = ((EditText) findViewById(R.id.part_name_edittext)).getText().toString().trim();
+        String partType = partTypeSpinner.getSelectedItem().toString();
 
-        if (partName.isEmpty() || partType.isEmpty()) {
+        if (partName.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
