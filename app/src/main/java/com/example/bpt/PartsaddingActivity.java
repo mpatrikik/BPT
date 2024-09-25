@@ -2,6 +2,8 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.EditText;;
@@ -9,6 +11,7 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -72,6 +75,21 @@ public class PartsaddingActivity extends AppCompatActivity {
         // Load bicycles from Firebase
         loadBicycles();
 
+        // Handle bicycle spinner selection
+        bicycleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedBicycle = bicycleList.get(position);
+                if ("Add new bicycle".equals(selectedBicycle)) {
+                    showAddBicycleDialog();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
+        // Handle the homebutton click event
         ImageButton homeButton = findViewById(R.id.home_button);
         homeButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, DashboardActivity.class);
@@ -107,7 +125,6 @@ public class PartsaddingActivity extends AppCompatActivity {
     }
 
     private void loadBicycles() {
-        // Get user's bicycles from Firebase
         mDatabase.child("users").child(userId).child("bicycles")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -117,6 +134,7 @@ public class PartsaddingActivity extends AppCompatActivity {
                             String bicycleName = snapshot.getValue(String.class);
                             bicycleList.add(bicycleName);
                         }
+                        bicycleList.add("Add new bicycle");
                         bicycleAdapter.notifyDataSetChanged(); // Update the spinner with the new data
                     }
 
@@ -127,11 +145,47 @@ public class PartsaddingActivity extends AppCompatActivity {
                 });
     }
 
+    private void showAddBicycleDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add New Bicycle");
+
+        // Input field for bicycle name
+        final EditText input = new EditText(this);
+        builder.setView(input);
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String bicycleName = input.getText().toString().trim();
+            if (!bicycleName.isEmpty()) {
+                addNewBicycleToDatabase(bicycleName);
+            } else {
+                Toast.makeText(this, "Bicycle name cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void addNewBicycleToDatabase(String bicycleName) {
+        DatabaseReference bicycleRef = mDatabase.child("users").child(userId).child("bicycles").push();
+        bicycleRef.setValue(bicycleName)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PartsaddingActivity.this, "Bicycle added successfully", Toast.LENGTH_SHORT).show();
+                    bicycleList.add(bicycleName);
+                    bicycleAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add bicycle", Toast.LENGTH_SHORT).show());
+    }
+
     private void addPartToDatabase() {
         // Get selected bicycle and part details from input fields
         String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
         String partName = ((EditText) findViewById(R.id.part_name_edittext)).getText().toString().trim();
         String partType = partTypeSpinner.getSelectedItem().toString();
+
+        if("Add new bicycle".equals(selectedBicycle)) {
+            Toast.makeText(this, "Please select a bicycle", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         if (partName.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();

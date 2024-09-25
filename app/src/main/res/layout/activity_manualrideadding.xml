@@ -199,7 +199,9 @@
         android:layout_weight="1"
         android:hint="Distance(km)"
         android:gravity="center"
-        android:fontFamily="@font/averagesans_regular" />
+        android:fontFamily="@font/averagesans_regular"
+        android:inputType="numberDecimal"
+        android:digits="0123456789."/>
 
     <EditText
         android:id="@+id/ridden_time_input"

@@ -3,6 +3,8 @@ package com.example.bpt;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -66,6 +68,59 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
         ImageButton submitButton = findViewById(R.id.manual_ride_adding_button_submit);
         submitButton.setOnClickListener(v -> saveRide());
+
+        EditText distanceEditText = findViewById(R.id.ridden_distance_input);
+        // Add TextWatcher to restrict distance input
+        distanceEditText.addTextChangedListener(new TextWatcher() {
+            private boolean isManualChange = false; // Jelzi, ha kézi módosítás történik
+            private boolean isDecimalAdded = false; // Jelzi, ha már van tizedesvessző
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (isManualChange) {
+                    return; // Ha kézzel módosítunk, nem futtatjuk újra
+                }
+
+                String input = s.toString();
+
+                // Ellenőrizzük, hogy van-e tizedesvessző
+                if (input.contains(".")) {
+                    if (!isDecimalAdded) {
+                        if (input.indexOf(".") == 0) {
+                            // Ha a tizedesvessző az első karakter, töröljük
+                            isManualChange = true;
+                            distanceEditText.setText(input.substring(1));
+                            distanceEditText.setSelection(input.length() - 1);
+                            isManualChange = false;
+                            Toast.makeText(ManualRideAddingActivity.this, "A tizedesvessző előtt számot kell megadni!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            isDecimalAdded = true; // Az első tizedesvesszőt elfogadjuk
+                        }
+                    }
+                }
+
+                // Ha már van tizedesvessző, további tizedesvessző beírását megakadályozzuk
+                if (isDecimalAdded && input.indexOf(".", input.indexOf(".") + 1) != -1) {
+                    isManualChange = true;
+                    distanceEditText.setText(input.substring(0, input.length() - 1));
+                    distanceEditText.setSelection(input.length() - 1);
+                    isManualChange = false;
+                    Toast.makeText(ManualRideAddingActivity.this, "Csak egy tizedesvessző lehet!", Toast.LENGTH_SHORT).show();
+                }
+
+                // Ha az input üres, alaphelyzetbe állítjuk a tizedest
+                if (input.isEmpty()) {
+                    isDecimalAdded = false;
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
 
 
         // Ellenőrizzük a bejelentkezett felhasználót
@@ -235,6 +290,38 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         String date = ((TextView) findViewById(R.id.date_picker)).getText().toString();
         String time = ((TextView) findViewById(R.id.time_picker)).getText().toString();
         String distance = ((EditText) findViewById(R.id.ridden_distance_input)).getText().toString();
+
+        // Ellenőrizzük, hogy minden kötelező adat meg van-e adva
+        if (selectedBicycle.isEmpty() || selectedBicycle.equals("Add new bicycle")) {
+            Toast.makeText(this, "Please select a bicycle", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (rideTitle.isEmpty()) {
+            Toast.makeText(this, "Please enter a ride title", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (date.isEmpty() || date.equals("Today")) {
+            Toast.makeText(this, "Please select a date", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (time.isEmpty() || time.equals("Now")) {
+            Toast.makeText(this, "Please select a time", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (distance.isEmpty()) {
+            Toast.makeText(this, "Please enter the ridden distance", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            Double.parseDouble(distance);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Please enter a valid distance", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
         // Ride ID létrehozása
         String userId = mAuth.getCurrentUser().getUid();
