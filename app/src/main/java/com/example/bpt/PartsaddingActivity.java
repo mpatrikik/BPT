@@ -2,6 +2,7 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -23,7 +24,6 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class PartsaddingActivity extends AppCompatActivity {
 
@@ -58,22 +58,40 @@ public class PartsaddingActivity extends AppCompatActivity {
         partTypeSpinner = findViewById(R.id.part_type_spinner);
         addPartButton = findViewById(R.id.add_part_button);
         bicycleList = new ArrayList<>();
-        partTypeList = new ArrayList<>(Arrays.asList("Brake", "Chain", "Handlebar", "Tire", "Saddle"));
+        partTypeList = new ArrayList<>();
+
+        loadBicycles();
+        checkAndCreatePartTypesNode();
+        checkAndCreatePartsNode();
+
 
         // Set up the adapter for the bicycle spinner
         bicycleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
         bicycleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bicycleSpinner.setAdapter(bicycleAdapter);
 
+
         // Set up the adapter for the part type spinner
         partTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, partTypeList);
         partTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         partTypeSpinner.setAdapter(partTypeAdapter);
 
-        checkAndCreatePartsNode();
+        //Spinner event: Add new type
+        partTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedPartType = partTypeList.get(position);
+                if ("Add new type".equals(selectedPartType)) {
+                    showAddPartTypeDialog();
+                }
+            }
 
-        // Load bicycles from Firebase
-        loadBicycles();
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
 
         // Handle bicycle spinner selection
         bicycleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -100,6 +118,82 @@ public class PartsaddingActivity extends AppCompatActivity {
         addPartButton.setOnClickListener(v -> addPartToDatabase());
     }
 
+    private void checkAndCreatePartTypesNode() {
+        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // If "part_types" node doesn't exist, create it
+                if (!dataSnapshot.hasChild("part_types")) {
+                    mDatabase.child("users").child(userId).child("part_types").setValue(new ArrayList<>())
+                            .addOnCompleteListener(task -> {
+                                if (task.isSuccessful()) {
+                                    Toast.makeText(PartsaddingActivity.this, "Part types section created.", Toast.LENGTH_SHORT).show();
+                                    loadPartTypes();
+                                } else {
+                                    Toast.makeText(PartsaddingActivity.this, "Failed to create part types section.", Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                } else {
+                    loadPartTypes(); // Load existing part types
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(PartsaddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadPartTypes() {
+        mDatabase.child("users").child(userId).child("part_types").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                partTypeList.clear();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String partTypeName = snapshot.getValue(String.class);
+                    partTypeList.add(partTypeName);
+                }
+                partTypeList.add("Add new type");
+                partTypeAdapter.notifyDataSetChanged();
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(PartsaddingActivity.this, "Failed to load part types", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void showAddPartTypeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add New Part Type");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String partTypeName = input.getText().toString().trim();
+            if (!partTypeName.isEmpty()) {
+                addNewPartTypeToDatabase(partTypeName);
+            } else {
+                Toast.makeText(this, "Part type name cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void addNewPartTypeToDatabase(String partTypeName) {
+        DatabaseReference partTypeRef = mDatabase.child("users").child(userId).child("part_types").push();
+        partTypeRef.setValue(partTypeName)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PartsaddingActivity.this, "Part type added successfully", Toast.LENGTH_SHORT).show();
+                    partTypeList.add(partTypeList.size() - 1, partTypeName);
+                    partTypeAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add part type", Toast.LENGTH_SHORT).show());
+    }
+
     private void checkAndCreatePartsNode() {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -122,6 +216,38 @@ public class PartsaddingActivity extends AppCompatActivity {
                 Toast.makeText(PartsaddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void addPartToDatabase() {
+        // Get selected bicycle and part details from input fields
+        String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
+        String partName = ((EditText) findViewById(R.id.part_name_edittext)).getText().toString().trim();
+        String partType = partTypeSpinner.getSelectedItem().toString();
+
+        if("Add new bicycle".equals(selectedBicycle)) {
+            Toast.makeText(this, "Please select a bicycle", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (partName.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Create a unique ID for the part and save it to Firebase
+        String partId = mDatabase.child("users").child(userId).child("parts").push().getKey();
+
+        Part part = new Part(selectedBicycle, partName, partType);
+
+        mDatabase.child("users").child(userId).child("parts").child(partId).setValue(part)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        Toast.makeText(PartsaddingActivity.this, "Part added successfully", Toast.LENGTH_SHORT).show();
+                        finish(); // Go back to the previous activity (e.g. Dashboard)
+                    } else {
+                        Toast.makeText(PartsaddingActivity.this, "Failed to add part", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void loadBicycles() {
@@ -174,38 +300,6 @@ public class PartsaddingActivity extends AppCompatActivity {
                     bicycleAdapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add bicycle", Toast.LENGTH_SHORT).show());
-    }
-
-    private void addPartToDatabase() {
-        // Get selected bicycle and part details from input fields
-        String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
-        String partName = ((EditText) findViewById(R.id.part_name_edittext)).getText().toString().trim();
-        String partType = partTypeSpinner.getSelectedItem().toString();
-
-        if("Add new bicycle".equals(selectedBicycle)) {
-            Toast.makeText(this, "Please select a bicycle", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (partName.isEmpty()) {
-            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Create a unique ID for the part and save it to Firebase
-        String partId = mDatabase.child("users").child(userId).child("parts").push().getKey();
-
-        Part part = new Part(selectedBicycle, partName, partType);
-
-        mDatabase.child("users").child(userId).child("parts").child(partId).setValue(part)
-                .addOnCompleteListener(task -> {
-                    if (task.isSuccessful()) {
-                        Toast.makeText(PartsaddingActivity.this, "Part added successfully", Toast.LENGTH_SHORT).show();
-                        finish(); // Go back to the previous activity (e.g. Dashboard)
-                    } else {
-                        Toast.makeText(PartsaddingActivity.this, "Failed to add part", Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 
     // Create a Part class to store part details
