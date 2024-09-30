@@ -87,6 +87,12 @@ public class DashboardActivity extends AppCompatActivity {
             Intent intent = new Intent(this, PartsaddingActivity.class);
             startActivity(intent);
         });
+
+        ImageButton addRidesButton = findViewById(R.id.add_rides_button);
+        addRidesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void loadBikes() {
@@ -98,7 +104,7 @@ public class DashboardActivity extends AppCompatActivity {
                         bikeList.clear();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             String bikeName = snapshot.getValue(String.class);
-                            bikeList.add(bikeName);
+                            calculateTotalDistanceForBike(bikeName);
                         }
                         adapterBikes.notifyDataSetChanged();
                     }
@@ -106,6 +112,37 @@ public class DashboardActivity extends AppCompatActivity {
                     public void onCancelled(DatabaseError databaseError) {
                         Log.e("DashboardActivity", "Failde to load bikes: ", databaseError.toException());
                         Toast.makeText(DashboardActivity.this, "Error loading bikes", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void calculateTotalDistanceForBike(String bikeName) {
+        String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).child("rides")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        double totalDistance = 0;
+                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                            String selectedBike = rideSnapshot.child("selectedBicycle").getValue(String.class);
+                            if (bikeName.equals(selectedBike)) {
+                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                totalDistance += Double.parseDouble(distanceStr);
+                            }
+                        }
+                        String formattedDistance;
+                        if (totalDistance % 1 == 0) {
+                            formattedDistance = String.format("%.0f", totalDistance);
+                        } else {
+                            formattedDistance = String.format("%.1f", totalDistance);
+                        }
+                        bikeList.add(bikeName + "\n" + formattedDistance + " km" + "\n");
+                        adapterBikes.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("DashboardActivity", "Failed to calculate total distance: ", databaseError.toException());
                     }
                 });
     }

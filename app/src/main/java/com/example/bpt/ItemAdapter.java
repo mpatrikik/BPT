@@ -1,20 +1,29 @@
 package com.example.bpt;
 
+import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
     private List<DashboardActivity.Ride> rides;
 
-    public ItemAdapter(List<DashboardActivity.Ride> rides) {
-        this.rides = rides;
-    }
+    public ItemAdapter(List<DashboardActivity.Ride> rides) { this.rides = rides; }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -30,12 +39,97 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         holder.dateTextView.setText("Date: " + ride.getDate());
         holder.timeTextView.setText("Time: " + ride.getTime());
         holder.distanceTextView.setText("Distance: " + ride.getDistance() + " km");
+
+//        holder.itemView.setOnLongClickListener(v -> {
+//            Intent intent = new Intent(holder.itemView.getContext(), RideDetailsActivity.class);
+//            intent.putExtra("ride", ride.getRideTitle());
+//            v.getContext().startActivity(intent);
+//        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle("Delete Ride")
+                    .setMessage("Are you sure you want to delete this ride?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        // Ride törlése az adatbázisból
+                        deleteRideFromDatabase(ride, position);
+                    })
+                    .setNegativeButton("No", null)
+                    .show();
+            return true;
+        });
     }
 
-    @Override
-    public int getItemCount() {
-        return rides.size();
+    private void deleteRideFromDatabase(DashboardActivity.Ride ride, int position) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference rideRef = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(userId).child("rides");
+
+        rideRef.orderByChild("rideTitle").equalTo(ride.getRideTitle()).addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    snapshot.getRef().removeValue();
+                }
+                rides.remove(position);
+                notifyItemRemoved(position);
+                notifyItemRangeChanged(position, rides.size());
+
+                //updateTotalDistanceForBike(ride.getSelectedBicycle());
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("ItemAdapter", "Error deleting ride: ", databaseError.toException());
+            }
+        });
     }
+
+//    private void updateTotalDistanceForBike(String selectedBike) {
+//        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+//        DatabaseReference rideRef = FirebaseDatabase.getInstance().getReference()
+//                .child("users").child(userId).child("rides");
+//
+//        rideRef.orderByChild("selectedBicycle").equalTo(selectedBike)
+//                .addListenerForSingleValueEvent(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                        double totalDistance = 0;
+//                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+//                            String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+//                            totalDistance += Double.parseDouble(distanceStr);
+//                        }
+//
+//                        // Kerékpár össztávolságának frissítése
+//                        String formattedDistance = String.format("%.1f", totalDistance);
+//                        DatabaseReference bikeRef = FirebaseDatabase.getInstance().getReference()
+//                                .child("users").child(userId).child("bicycles");
+//
+//                        bikeRef.orderByValue().equalTo(selectedBike).addListenerForSingleValueEvent(new ValueEventListener() {
+//                            @Override
+//                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+//                                    snapshot.getRef().setValue(selectedBike + "\n" + formattedDistance + " km");
+//                                }
+//                            }
+//
+//                            @Override
+//                            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                                Log.e("ItemAdapter", "Error updating total distance: ", databaseError.toException());
+//                            }
+//                        });
+//                    }
+//
+//                    @Override
+//                    public void onCancelled(@NonNull DatabaseError databaseError) {
+//                        Log.e("ItemAdapter", "Error calculating total distance: ", databaseError.toException());
+//                    }
+//                });
+//    }
+
+
+    @Override
+    public int getItemCount() { return rides.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView bicycleTextView;
