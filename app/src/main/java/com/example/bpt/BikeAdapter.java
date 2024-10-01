@@ -12,21 +12,26 @@ import java.util.List;
 
 public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
     private List<String> bikes;
+    private List<String> distances;
 
-    public BikeAdapter(List<String> bikes) {
+    public BikeAdapter(List<String> bikes, List<String> distances) {
         this.bikes = bikes;
+        this.distances = distances;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_bike, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bikeTextView.setText(bikes.get(position));  // Csak a kerékpár nevét jeleníti meg
+        String bikeName = bikes.get(position);
+        String totalDistance = distances.get(position);
+        holder.bikeNameTextView.setText(bikeName);
+        holder.bikedistanceTextView.setText(totalDistance + " km");
     }
 
     @Override
@@ -35,11 +40,13 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView bikeTextView;
+        public TextView bikeNameTextView;
+        public TextView bikedistanceTextView;
 
         public ViewHolder(View view) {
             super(view);
-            bikeTextView = view.findViewById(android.R.id.text1);
+            bikeNameTextView = view.findViewById(R.id.bike_name_text_view);
+            bikedistanceTextView = view.findViewById(R.id.bike_distance_text_view);
         }
     }
 }

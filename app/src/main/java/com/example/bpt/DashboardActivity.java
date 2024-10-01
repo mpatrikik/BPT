@@ -29,6 +29,7 @@ public class DashboardActivity extends AppCompatActivity {
     private ItemAdapter adapterRides;
     private BikeAdapter adapterBikes;
     private List<String> bikeList;
+    private List<String> distanceList;
     private List<Ride> rideList;
     private SwipeRefreshLayout swipeRefreshLayout;
 
@@ -46,7 +47,8 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerViewBikes = findViewById(R.id.recycler_view_bikes);
         recyclerViewBikes.setLayoutManager(new LinearLayoutManager(this));
         bikeList = new ArrayList<>();
-        adapterBikes = new BikeAdapter(bikeList);
+        distanceList = new ArrayList<>();
+        adapterBikes = new BikeAdapter(bikeList, distanceList);
         recyclerViewBikes.setAdapter(adapterBikes);
 
         //Recycler view for rides
@@ -102,6 +104,7 @@ public class DashboardActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         bikeList.clear();
+                        distanceList.clear();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             String bikeName = snapshot.getValue(String.class);
                             calculateTotalDistanceForBike(bikeName);
@@ -136,7 +139,8 @@ public class DashboardActivity extends AppCompatActivity {
                         } else {
                             formattedDistance = String.format("%.1f", totalDistance);
                         }
-                        bikeList.add(bikeName + "\n" + formattedDistance + " km" + "\n");
+                        bikeList.add(bikeName);
+                        distanceList.add(formattedDistance);
                         adapterBikes.notifyDataSetChanged();
                     }
 
