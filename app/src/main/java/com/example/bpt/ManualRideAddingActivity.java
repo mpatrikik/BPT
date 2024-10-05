@@ -404,20 +404,74 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         String userId = mAuth.getCurrentUser().getUid();
         String rideId = mDatabase.child("users").child(userId).child("rides").push().getKey();
 
+        if (selectedPartsIndexes.isEmpty()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("No parts selected")
+                    .setMessage("Are you sure you want to save the ride without selecting any parts?")
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        saveRideToDatabase(selectedBicycle, rideTitle, date, time, distance, new ArrayList<>());
+                    })
+                    .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                    .show();
+        } else {
+            ArrayList<String> selectedPartsList = new ArrayList<>();
+            for (int index : selectedPartsIndexes) {
+                selectedPartsList.add(partList.get(index));
+            }
+            saveRideToDatabase(selectedBicycle, rideTitle, date, time, distance, selectedPartsList);
+        }
+
+//        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(DataSnapshot dataSnapshot) {
+//                if (!dataSnapshot.hasChild("bicycles")) {
+//                    // Ha nincs meg a bicycles séma, hozzuk létre
+//                    mDatabase.child("users").child(userId).child("bicycles").setValue(new ArrayList<>());
+//                }
+//                if (!dataSnapshot.hasChild("rides")) {
+//                    // Ha nincs meg a rides séma, hozzuk létre
+//                    mDatabase.child("users").child(userId).child("rides").setValue(new ArrayList<>());
+//                }
+//
+//                // Ride adatok mentése
+//                Ride ride = new Ride(selectedBicycle, rideTitle, date, time, distance, selectedPartsList);
+//                mDatabase.child("users").child(userId).child("rides").child(rideId).setValue(ride)
+//                        .addOnCompleteListener(task -> {
+//                            if (task.isSuccessful()) {
+//                                Toast.makeText(ManualRideAddingActivity.this, "Ride saved successfully", Toast.LENGTH_SHORT).show();
+//                                Intent intent = new Intent(ManualRideAddingActivity.this, DashboardActivity.class);
+//                                startActivity(intent);
+//                                finish();
+//                            } else {
+//                                Toast.makeText(ManualRideAddingActivity.this, "Failed to save ride", Toast.LENGTH_SHORT).show();
+//                            }
+//                        });
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//                Log.e("ManualRideAddingActivity", "Failed to load bikes: ", databaseError.toException());
+//                Toast.makeText(ManualRideAddingActivity.this, "Error loading bikes", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+    }
+
+    private void saveRideToDatabase(String selectedBicycle, String rideTitle, String date, String time, String distance, ArrayList<String> selectedPartsList) {
+        String userId = mAuth.getCurrentUser().getUid();
+        String rideId = mDatabase.child("users").child(userId).child("rides").push().getKey();
+
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (!dataSnapshot.hasChild("bicycles")) {
-                    // Ha nincs meg a bicycles séma, hozzuk létre
                     mDatabase.child("users").child(userId).child("bicycles").setValue(new ArrayList<>());
                 }
                 if (!dataSnapshot.hasChild("rides")) {
-                    // Ha nincs meg a rides séma, hozzuk létre
                     mDatabase.child("users").child(userId).child("rides").setValue(new ArrayList<>());
                 }
 
-                // Ride adatok mentése
-                Ride ride = new Ride(selectedBicycle, rideTitle, date, time, distance);
+                // Ride adatok mentése, beleértve a kiválasztott alkatrészeket is
+                Ride ride = new Ride(selectedBicycle, rideTitle, date, time, distance, selectedPartsList);
                 mDatabase.child("users").child(userId).child("rides").child(rideId).setValue(ride)
                         .addOnCompleteListener(task -> {
                             if (task.isSuccessful()) {
@@ -445,15 +499,17 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         public String date;
         public String time;
         public String distance;
+        public ArrayList<String> selectedParts;
 
         public Ride(){}
 
-        public Ride(String selectedBicycle, String rideTitle, String date, String time, String distance){
+        public Ride(String selectedBicycle, String rideTitle, String date, String time, String distance, ArrayList<String> selectedParts){
             this.selectedBicycle = selectedBicycle;
             this.rideTitle = rideTitle;
             this.date = date;
             this.time = time;
             this.distance = distance;
+            this.selectedParts = selectedParts;
         }
     }
 }

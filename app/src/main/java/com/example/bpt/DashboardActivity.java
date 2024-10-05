@@ -76,6 +76,12 @@ public class DashboardActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        ImageButton bikeAddingButton = findViewById(R.id.add_bikes_button);
+        bikeAddingButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, BikeAddingActivity.class);
+            startActivity(intent);
+        });
+
         //Manual ride adding button
         ImageButton manualRideAddingButton = findViewById(R.id.manual_ride_adding_button);
         manualRideAddingButton.setOnClickListener(v -> {

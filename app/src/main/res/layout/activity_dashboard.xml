@@ -126,25 +126,49 @@
                     app:layout_constraintWidth_percent="0.9"/>
 
                 <!-- "Bikes" szekció -->
-                <TextView
-                    android:id="@+id/bikes"
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/bikes_text_button_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="15dp"
-                    android:layout_marginStart="20dp"
-                    android:text="Bikes"
-                    android:textStyle="bold"
-                    android:fontFamily="@font/lalezar_regular"
-                    android:textSize="30sp"
-                    android:textColor="#000000"
-                    android:textAlignment="viewStart"
-                    app:layout_constraintTop_toBottomOf="@id/horizontal_line1"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"/>
+                    android:padding="0dp"
+                    tools:ignore="HardcodedText"
+                    app:layout_constraintTop_toBottomOf="@id/horizontal_line1">
 
-                <!-- Kerékpárok RecyclerView -->
+                    <TextView
+                        android:id="@+id/bikes_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:fontFamily="@font/lalezar_regular"
+                        android:text="Bikes"
+                        android:textAlignment="center"
+                        android:gravity="center"
+                        android:textColor="#000000"
+                        android:textSize="30sp"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/add_bikes_button" />
 
-                <!-- Második vízszintes elválasztó vonal -->
+                    <ImageButton
+                        android:id="@+id/add_bikes_button"
+                        android:layout_width="45dp"
+                        android:layout_height="45dp"
+                        android:layout_marginStart="15dp"
+                        android:background="@null"
+                        android:scaleType="fitCenter"
+                        android:contentDescription="Parts_adding_button"
+                        android:src="@drawable/parts_adding_button"
+                        app:layout_constraintStart_toEndOf="@id/bikes_text"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintVertical_bias="0.5" />
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/recycler_view_bikes"
@@ -155,7 +179,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintHorizontal_bias="0.0"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/bikes" />
+                    app:layout_constraintTop_toBottomOf="@id/bikes_text_button_layout" />
 
                 <View
                     android:id="@+id/horizontal_line2"
