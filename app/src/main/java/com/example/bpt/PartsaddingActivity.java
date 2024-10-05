@@ -198,7 +198,6 @@ public class PartsaddingActivity extends AppCompatActivity {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // If "parts" node doesn't exist, create it
                 if (!dataSnapshot.hasChild("parts")) {
                     mDatabase.child("users").child(userId).child("parts").setValue(new ArrayList<>())
                             .addOnCompleteListener(task -> {
@@ -208,7 +207,7 @@ public class PartsaddingActivity extends AppCompatActivity {
                                     Toast.makeText(PartsaddingActivity.this, "Failed to create parts section.", Toast.LENGTH_SHORT).show();
                                 }
                             });
-                }
+                } else { }
             }
 
             @Override

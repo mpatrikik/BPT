@@ -85,49 +85,6 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         });
     }
 
-//    private void updateTotalDistanceForBike(String selectedBike) {
-//        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//        DatabaseReference rideRef = FirebaseDatabase.getInstance().getReference()
-//                .child("users").child(userId).child("rides");
-//
-//        rideRef.orderByChild("selectedBicycle").equalTo(selectedBike)
-//                .addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                        double totalDistance = 0;
-//                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
-//                            String distanceStr = rideSnapshot.child("distance").getValue(String.class);
-//                            totalDistance += Double.parseDouble(distanceStr);
-//                        }
-//
-//                        // Kerékpár össztávolságának frissítése
-//                        String formattedDistance = String.format("%.1f", totalDistance);
-//                        DatabaseReference bikeRef = FirebaseDatabase.getInstance().getReference()
-//                                .child("users").child(userId).child("bicycles");
-//
-//                        bikeRef.orderByValue().equalTo(selectedBike).addListenerForSingleValueEvent(new ValueEventListener() {
-//                            @Override
-//                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                                    snapshot.getRef().setValue(selectedBike + "\n" + formattedDistance + " km");
-//                                }
-//                            }
-//
-//                            @Override
-//                            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                                Log.e("ItemAdapter", "Error updating total distance: ", databaseError.toException());
-//                            }
-//                        });
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(@NonNull DatabaseError databaseError) {
-//                        Log.e("ItemAdapter", "Error calculating total distance: ", databaseError.toException());
-//                    }
-//                });
-//    }
-
-
     @Override
     public int getItemCount() { return rides.size(); }
 

@@ -42,7 +42,7 @@
         tools:ignore="HardcodedText" />
 
     <TextView
-        android:id="@+id/select_bicycle"
+        android:id="@+id/select_a_bicycle_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
@@ -57,16 +57,16 @@
         app:layout_constraintTop_toBottomOf="@id/logo"/>
 
     <Spinner
-        android:spinnerMode="dropdown"
         android:id="@+id/bicycle_spinner"
+        android:spinnerMode="dropdown"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/averagesans_regular"
         android:layout_marginTop="10dp"
         android:layout_marginStart="30dp"
-        android:layout_marginEnd="30dp"
+        android:layout_marginEnd="100dp"
         android:gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/select_bicycle"
+        app:layout_constraintTop_toBottomOf="@id/select_a_bicycle_text"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
@@ -74,11 +74,38 @@
         android:id="@+id/horizontal_line1"
         android:layout_width="0dp"
         android:layout_height="2dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="20dp"
         android:background="#808080"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/bicycle_spinner"
+        app:layout_constraintWidth_percent="0.9"/>
+
+    <TextView
+        android:id="@+id/select_parts"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Select parts"
+        android:textSize="12pt"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:fontFamily="@font/averagesans_regular"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/horizontal_line1"/>
+
+
+    <View
+        android:id="@+id/horizontal_line2"
+        android:layout_width="0dp"
+        android:layout_height="2dp"
+        android:layout_marginTop="20dp"
+        android:background="#808080"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/select_parts"
         app:layout_constraintWidth_percent="0.9"/>
 
     <TextView
@@ -94,7 +121,7 @@
         android:textColor="@android:color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/horizontal_line1"/>
+        app:layout_constraintTop_toBottomOf="@id/horizontal_line2"/>
 
     <EditText
         android:id="@+id/title_of_ride"

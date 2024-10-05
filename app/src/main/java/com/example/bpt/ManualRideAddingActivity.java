@@ -35,9 +35,14 @@ import java.util.Calendar;
 public class ManualRideAddingActivity extends AppCompatActivity {
 
     private ArrayList<String> bicycleList;
+    private ArrayList<String> partList;
     private ArrayAdapter<String> adapter;
+    private boolean[] selectedParts;
+    private ArrayList<Integer> selectedPartsIndexes = new ArrayList<>();
     private String userId;
     private DatabaseReference mDatabase;
+    //private Spinner bicycleSpinner;
+    private TextView selectedPartsTextView;
     private TextView datePickerTextView;
     private TextView timePickerTextView;
     private FirebaseAuth mAuth;
@@ -58,6 +63,9 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
         Spinner bicycleSpinner = findViewById(R.id.bicycle_spinner);
         bicycleList = new ArrayList<>();
+
+        selectedPartsTextView = findViewById(R.id.select_parts);
+        partList = new ArrayList<>();
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -112,15 +120,12 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                 }
 
                 // Ha az input üres, alaphelyzetbe állítjuk a tizedest
-                if (input.isEmpty()) {
-                    isDecimalAdded = false;
-                }
+                if (input.isEmpty()) { isDecimalAdded = false; }
             }
 
             @Override
             public void afterTextChanged(Editable s) {}
         });
-
 
 
         // Ellenőrizzük a bejelentkezett felhasználót
@@ -134,8 +139,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         } else {
             userId = currentUser.getUid();
             Log.d("ManualRideAdding", "User ID: " + userId);
-
-            // Ellenőrizzük, hogy a felhasználói adat létezik-e már
             checkAndCreateUser(userId);
         }
 
@@ -146,6 +149,8 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                 String selectedBicycle = bicycleList.get(position);
                 if ("Add new bicycle".equals(selectedBicycle)) {
                     showAddBicycleDialog();
+                } else {
+                    loadPartsForBicycle(selectedBicycle);
                 }
             }
 
@@ -153,6 +158,78 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+
+        selectedPartsTextView.setOnClickListener(v -> {
+            if (!partList.isEmpty()) {
+                showPartsSelectionDialog();
+            }else {
+                Toast.makeText(ManualRideAddingActivity.this, "No parts available for this bicycle.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void loadPartsForBicycle(String selectedBicycle) {
+        if (userId == null || selectedBicycle == null) {
+            Toast.makeText(this, "Felhasználó ID vagy kerékpár hiányzik. Nem lehet betölteni az alkatrészeket.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        mDatabase.child("users").child(userId).child("parts").orderByChild("bicycle").equalTo(selectedBicycle)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        partList.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String partName = snapshot.child("partName").getValue(String.class);
+                            partList.add(partName);
+                        }
+
+                        if (partList.isEmpty()) {
+                            Toast.makeText(ManualRideAddingActivity.this, "Ehhez a kerékpárhoz nincs elérhető alkatrész.", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // A többválasztásos lista beállítása
+                            selectedParts = new boolean[partList.size()];
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("ManualRideAddingActivity", "Nem sikerült betölteni az alkatrészeket: ", databaseError.toException());
+                        Toast.makeText(ManualRideAddingActivity.this, "Hiba történt az alkatrészek betöltésekor.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void showPartsSelectionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select parts");
+
+        builder.setMultiChoiceItems(partList.toArray(new String[0]), selectedParts, (dialog, which, isChecked) -> {
+            if (isChecked) {
+                selectedPartsIndexes.add(which);
+            } else {
+                selectedPartsIndexes.remove(Integer.valueOf(which));
+            }
+        });
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            if (selectedPartsIndexes.isEmpty()) {
+                selectedPartsTextView.setText("Select parts");
+            } else {
+                StringBuilder selectedPartsText = new StringBuilder();
+                for (int i = 0; i < selectedPartsIndexes.size(); i++) {
+                    selectedPartsText.append(partList.get(selectedPartsIndexes.get(i)));
+                    if (i != selectedPartsIndexes.size() - 1) {
+                        selectedPartsText.append(", ");
+                    }
+                }
+                selectedPartsTextView.setText(selectedPartsText.toString());
+            }
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+        builder.create().show();
     }
 
     private void checkAndCreateUser(String userId) {
