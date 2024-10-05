@@ -2,12 +2,13 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.InputType;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.EditText;;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -31,6 +32,7 @@ public class PartsaddingActivity extends AppCompatActivity {
     private ArrayList<String> bicycleList, partTypeList;
     private ArrayAdapter<String> bicycleAdapter, partTypeAdapter;
     private ImageButton addPartButton;
+    private EditText partNameEditText;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private String userId;
@@ -57,6 +59,7 @@ public class PartsaddingActivity extends AppCompatActivity {
         bicycleSpinner = findViewById(R.id.bicycle_spinner);
         partTypeSpinner = findViewById(R.id.part_type_spinner);
         addPartButton = findViewById(R.id.add_part_button);
+        partNameEditText = findViewById(R.id.part_name_edittext);  // Using the existing part_name_edittext
         bicycleList = new ArrayList<>();
         partTypeList = new ArrayList<>();
 
@@ -64,36 +67,27 @@ public class PartsaddingActivity extends AppCompatActivity {
         checkAndCreatePartTypesNode();
         checkAndCreatePartsNode();
 
-
         // Set up the adapter for the bicycle spinner
         bicycleAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
         bicycleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bicycleSpinner.setAdapter(bicycleAdapter);
-
 
         // Set up the adapter for the part type spinner
         partTypeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, partTypeList);
         partTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         partTypeSpinner.setAdapter(partTypeAdapter);
 
-        //Spinner event: Add new type
-        partTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedPartType = partTypeList.get(position);
-                if ("Add new type".equals(selectedPartType)) {
-                    showAddPartTypeDialog();
-                }
-            }
+        // Gomb alapértelmezés szerint letiltva és halványítva
+        addPartButton.setEnabled(false);
+        addPartButton.setAlpha(0.5f);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        // TextWatcher az alkatrész névhez (partNameEditText)
+        partNameEditText.addTextChangedListener(inputWatcher);
 
-            }
-        });
+        // Spinner események figyelése
+        bicycleSpinner.setOnItemSelectedListener(spinnerWatcher);
+        partTypeSpinner.setOnItemSelectedListener(spinnerWatcher);
 
-
-        // Handle bicycle spinner selection
         bicycleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -118,11 +112,51 @@ public class PartsaddingActivity extends AppCompatActivity {
         addPartButton.setOnClickListener(v -> addPartToDatabase());
     }
 
+    // TextWatcher az EditText figyelésére
+    private final TextWatcher inputWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            checkFormCompletion();
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) { }
+    };
+
+    // AdapterView.OnItemSelectedListener a Spinnerek figyelésére
+    private final AdapterView.OnItemSelectedListener spinnerWatcher = new AdapterView.OnItemSelectedListener() {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            checkFormCompletion();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> parent) { }
+    };
+
+    // Ellenőrizzük, hogy az összes mező ki van-e töltve
+    private void checkFormCompletion() {
+        String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
+        String selectedPartType = partTypeSpinner.getSelectedItem().toString();
+        String partName = partNameEditText.getText().toString().trim();
+
+        // Ellenőrizzük, hogy minden mező ki van-e töltve
+        if (!partName.isEmpty() && !selectedBicycle.equals("Add new bicycle") && !selectedPartType.equals("Add new type")) {
+            addPartButton.setEnabled(true);
+            addPartButton.setAlpha(1.0f); // Visszaállítjuk az átlátszatlanságot
+        } else {
+            addPartButton.setEnabled(false);
+            addPartButton.setAlpha(0.5f); // Halványítjuk, ha nincs kitöltve
+        }
+    }
+
     private void checkAndCreatePartTypesNode() {
         mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // If "part_types" node doesn't exist, create it
                 if (!dataSnapshot.hasChild("part_types")) {
                     mDatabase.child("users").child(userId).child("part_types").setValue(new ArrayList<>())
                             .addOnCompleteListener(task -> {
@@ -134,64 +168,15 @@ public class PartsaddingActivity extends AppCompatActivity {
                                 }
                             });
                 } else {
-                    loadPartTypes(); // Load existing part types
+                    loadPartTypes();
                 }
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Toast.makeText(PartsaddingActivity.this, "Database error: " + databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-    }
-
-    private void loadPartTypes() {
-        mDatabase.child("users").child(userId).child("part_types").addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                partTypeList.clear();
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    String partTypeName = snapshot.getValue(String.class);
-                    partTypeList.add(partTypeName);
-                }
-                partTypeList.add("Add new type");
-                partTypeAdapter.notifyDataSetChanged();
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(PartsaddingActivity.this, "Failed to load part types", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-    private void showAddPartTypeDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Add New Part Type");
-
-        final EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
-
-        builder.setPositiveButton("Add", (dialog, which) -> {
-            String partTypeName = input.getText().toString().trim();
-            if (!partTypeName.isEmpty()) {
-                addNewPartTypeToDatabase(partTypeName);
-            } else {
-                Toast.makeText(this, "Part type name cannot be empty", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    private void addNewPartTypeToDatabase(String partTypeName) {
-        DatabaseReference partTypeRef = mDatabase.child("users").child(userId).child("part_types").push();
-        partTypeRef.setValue(partTypeName)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(PartsaddingActivity.this, "Part type added successfully", Toast.LENGTH_SHORT).show();
-                    partTypeList.add(partTypeList.size() - 1, partTypeName);
-                    partTypeAdapter.notifyDataSetChanged();
-                })
-                .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add part type", Toast.LENGTH_SHORT).show());
     }
 
     private void checkAndCreatePartsNode() {
@@ -217,23 +202,36 @@ public class PartsaddingActivity extends AppCompatActivity {
         });
     }
 
+    private void loadPartTypes() {
+        mDatabase.child("users").child(userId).child("part_types").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                partTypeList.clear();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String partTypeName = snapshot.getValue(String.class);
+                    partTypeList.add(partTypeName);
+                }
+                partTypeList.add("Add new type");
+                partTypeAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Toast.makeText(PartsaddingActivity.this, "Failed to load part types", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void addPartToDatabase() {
-        // Get selected bicycle and part details from input fields
         String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
-        String partName = ((EditText) findViewById(R.id.part_name_edittext)).getText().toString().trim();
+        String partName = partNameEditText.getText().toString().trim();
         String partType = partTypeSpinner.getSelectedItem().toString();
 
-        if("Add new bicycle".equals(selectedBicycle)) {
-            Toast.makeText(this, "Please select a bicycle", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (partName.isEmpty()) {
+        if (partName.isEmpty() || selectedBicycle.equals("Add new bicycle") || partType.equals("Add new type")) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Create a unique ID for the part and save it to Firebase
         String partId = mDatabase.child("users").child(userId).child("parts").push().getKey();
 
         Part part = new Part(selectedBicycle, partName, partType);
@@ -242,7 +240,7 @@ public class PartsaddingActivity extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         Toast.makeText(PartsaddingActivity.this, "Part added successfully", Toast.LENGTH_SHORT).show();
-                        finish(); // Go back to the previous activity (e.g. Dashboard)
+                        finish();
                     } else {
                         Toast.makeText(PartsaddingActivity.this, "Failed to add part", Toast.LENGTH_SHORT).show();
                     }
@@ -260,7 +258,7 @@ public class PartsaddingActivity extends AppCompatActivity {
                             bicycleList.add(bicycleName);
                         }
                         bicycleList.add("Add new bicycle");
-                        bicycleAdapter.notifyDataSetChanged(); // Update the spinner with the new data
+                        bicycleAdapter.notifyDataSetChanged();
                     }
 
                     @Override
@@ -274,7 +272,6 @@ public class PartsaddingActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add New Bicycle");
 
-        // Input field for bicycle name
         final EditText input = new EditText(this);
         builder.setView(input);
 
@@ -301,7 +298,6 @@ public class PartsaddingActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add bicycle", Toast.LENGTH_SHORT).show());
     }
 
-    // Create a Part class to store part details
     public static class Part {
         public String bicycle;
         public String partName;
