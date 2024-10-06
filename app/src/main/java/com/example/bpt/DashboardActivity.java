@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,7 +20,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DashboardActivity extends AppCompatActivity {
 
@@ -32,6 +36,8 @@ public class DashboardActivity extends AppCompatActivity {
     private List<String> distanceList;
     private List<Ride> rideList;
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    private final List<String> predefinedPartTypes = Arrays.asList("Chain", "Tire", "Wheelset", "Brake pads", "Brake disc", "Handlebar tape", "Casette", "Chainring", "Shifting cable", "Brake cable", "Bottom bracket");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +67,7 @@ public class DashboardActivity extends AppCompatActivity {
         loadBikes();
         loadRides();
 
+        checkAndCreatePartTypesNode();
 
         //SwipeRefreshLayout settings
         swipeRefreshLayout.setOnRefreshListener(() -> {
@@ -100,6 +107,43 @@ public class DashboardActivity extends AppCompatActivity {
         addRidesButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             startActivity(intent);
+        });
+    }
+
+    private void checkAndCreatePartTypesNode() {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        DatabaseReference partTypesRef = FirebaseDatabase.getInstance().getReference().child("users").child(userId).child("part_types");
+
+        // Ellenőrizzük, hogy a "part_types" node létezik-e
+        partTypesRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (String partType : predefinedPartTypes) {
+                    boolean exists = false;
+
+                    // Ellenőrizzük, hogy létezik-e már az adott partType a node-ban
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        String existingPartType = snapshot.getValue(String.class);
+                        if (partType.equals(existingPartType)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    // Ha az adott partType még nem létezik, hozzáadjuk egy egyedi kulccsal
+                    if (!exists) {
+                        DatabaseReference newPartTypeRef = partTypesRef.push();  // Egyedi kulcs létrehozása
+                        newPartTypeRef.setValue(partType)
+                                .addOnSuccessListener(aVoid -> Log.d("DashboardActivity", "Part type added: " + partType))
+                                .addOnFailureListener(e -> Log.e("DashboardActivity", "Failed to add part type: " + partType, e));
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.e("DashboardActivity", "Database error: " + databaseError.getMessage());
+            }
         });
     }
 

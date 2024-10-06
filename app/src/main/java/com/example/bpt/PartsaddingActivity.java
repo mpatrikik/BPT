@@ -101,6 +101,19 @@ public class PartsaddingActivity extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> parent) { }
         });
 
+        partTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedPartType = partTypeList.get(position);
+                if ("Add new type".equals(selectedPartType)) {
+                    showAddPartTypeDialog();  // Hívja meg az új part type dialogust
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) { }
+        });
+
         // Handle the homebutton click event
         ImageButton homeButton = findViewById(R.id.home_button);
         homeButton.setOnClickListener(v -> {
@@ -137,7 +150,6 @@ public class PartsaddingActivity extends AppCompatActivity {
         public void onNothingSelected(AdapterView<?> parent) { }
     };
 
-    // Ellenőrizzük, hogy az összes mező ki van-e töltve
     private void checkFormCompletion() {
         String selectedBicycle = bicycleSpinner.getSelectedItem().toString();
         String selectedPartType = partTypeSpinner.getSelectedItem().toString();
@@ -151,6 +163,67 @@ public class PartsaddingActivity extends AppCompatActivity {
             addPartButton.setEnabled(false);
             addPartButton.setAlpha(0.5f); // Halványítjuk, ha nincs kitöltve
         }
+    }
+
+    private void showAddPartTypeDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add New Part Type");
+
+        final EditText input = new EditText(this);
+        builder.setView(input);
+
+        builder.setPositiveButton("Add", (dialog, which) -> {
+            String partTypeName = input.getText().toString().trim();
+            if (!partTypeName.isEmpty()) {
+                checkIfPartTypeExistsAndAdd(partTypeName);
+            } else {
+                Toast.makeText(this, "Part type name cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void checkIfPartTypeExistsAndAdd(String partTypeName) {
+        // Lekérdezzük az adatbázisból az összes part_type-ot
+        mDatabase.child("users").child(userId).child("part_types")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        boolean exists = false;
+                        // Ellenőrizzük, hogy a partTypeName szerepel-e már az adatbázisban
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String existingTypeName = snapshot.getValue(String.class);
+                            if (partTypeName.equalsIgnoreCase(existingTypeName)) {
+                                exists = true;
+                                break;
+                            }
+                        }
+                        if (exists) {
+                            // Ha létezik, értesítjük a felhasználót
+                            Toast.makeText(PartsaddingActivity.this, "Part type already exists!", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Ha nem létezik, hozzáadjuk az adatbázishoz
+                            addNewPartTypeToDatabase(partTypeName);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Toast.makeText(PartsaddingActivity.this, "Error checking part type", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void addNewPartTypeToDatabase(String partTypeName) {
+        DatabaseReference partTypeRef = mDatabase.child("users").child(userId).child("part_types").push();
+        partTypeRef.setValue(partTypeName)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(PartsaddingActivity.this, "Part type added successfully", Toast.LENGTH_SHORT).show();
+                    partTypeList.add(partTypeList.size() - 1, partTypeName);  // Az új típust a listába is hozzáadjuk
+                    partTypeAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e -> Toast.makeText(PartsaddingActivity.this, "Failed to add part type", Toast.LENGTH_SHORT).show());
     }
 
     private void checkAndCreatePartTypesNode() {
