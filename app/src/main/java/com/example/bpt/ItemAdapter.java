@@ -40,11 +40,13 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         holder.timeTextView.setText("Time: " + ride.getTime());
         holder.distanceTextView.setText("Distance: " + ride.getDistance() + " km");
 
-//        holder.itemView.setOnLongClickListener(v -> {
-//            Intent intent = new Intent(holder.itemView.getContext(), RideDetailsActivity.class);
-//            intent.putExtra("ride", ride.getRideTitle());
-//            v.getContext().startActivity(intent);
-//        });
+        if(ride.selectedParts() != null && !ride.selectedParts.isEmpty()) {
+            holder.partsTextView.setVisibility(View.VISIBLE);
+            holder.partsTextView.setText("Parts: " + String.join(", ", ride.selectedParts));
+        } else {
+            holder.partsTextView.setVisibility(View.GONE);
+        }
+
 
         holder.itemView.setOnLongClickListener(v -> {
             new AlertDialog.Builder(v.getContext())
@@ -94,6 +96,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
         public TextView dateTextView;
         public TextView timeTextView;
         public TextView distanceTextView;
+        public TextView partsTextView;
 
         public ViewHolder(View view) {
             super(view);
@@ -102,6 +105,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
             dateTextView = view.findViewById(R.id.date_text_view);
             timeTextView = view.findViewById(R.id.time_text_view);
             distanceTextView = view.findViewById(R.id.distance_text_view);
+            partsTextView = view.findViewById(R.id.parts_text_view);
         }
     }
 }

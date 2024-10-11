@@ -229,35 +229,24 @@ public class DashboardActivity extends AppCompatActivity {
         public String date;
         public String time;
         public String distance;
+        public List<String> selectedParts;
 
         public Ride() {}
 
-        public Ride(String selectedBicycle, String rideTitle, String date, String time, String distance) {
+        public Ride(String selectedBicycle, String rideTitle, String date, String time, String distance, List<String> selectedParts) {
             this.selectedBicycle = selectedBicycle;
             this.rideTitle = rideTitle;
             this.date = date;
             this.time = time;
             this.distance = distance;
+            this.selectedParts = selectedParts;
         }
 
-        public String getSelectedBicycle() {
-            return selectedBicycle;
-        }
-
-        public String getRideTitle() {
-            return rideTitle;
-        }
-
-        public String getDate() {
-            return date;
-        }
-
-        public String getTime() {
-            return time;
-        }
-
-        public String getDistance() {
-            return distance;
-        }
+        public String getSelectedBicycle() { return selectedBicycle; }
+        public String getRideTitle() { return rideTitle; }
+        public String getDate() { return date; }
+        public String getTime() { return time; }
+        public String getDistance() { return distance; }
+        public List<String> selectedParts() { return selectedParts; }
     }
 }
