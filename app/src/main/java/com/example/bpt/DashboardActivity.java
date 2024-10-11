@@ -29,12 +29,14 @@ public class DashboardActivity extends AppCompatActivity {
 
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
-    private RecyclerView recyclerViewRides, recyclerViewBikes;
+    private RecyclerView recyclerViewRides, recyclerViewBikes, recyclerViewParts;
     private ItemAdapter adapterRides;
     private BikeAdapter adapterBikes;
+    private PartAdapter adapterParts;
     private List<String> bikeList;
     private List<String> distanceList;
     private List<Ride> rideList;
+    private List<Part> partList;
     private SwipeRefreshLayout swipeRefreshLayout;
 
     private final List<String> predefinedPartTypes = Arrays.asList("Chain", "Tire", "Wheelset", "Brake pads", "Brake disc", "Handlebar tape", "Casette", "Chainring", "Shifting cable", "Brake cable", "Bottom bracket");
@@ -57,6 +59,13 @@ public class DashboardActivity extends AppCompatActivity {
         adapterBikes = new BikeAdapter(bikeList, distanceList);
         recyclerViewBikes.setAdapter(adapterBikes);
 
+        // Recycler view for parts
+        recyclerViewParts = findViewById(R.id.recycler_view_parts);
+        recyclerViewParts.setLayoutManager(new LinearLayoutManager(this));
+        partList = new ArrayList<>();
+        adapterParts = new PartAdapter(partList);
+        recyclerViewParts.setAdapter(adapterParts);
+
         //Recycler view for rides
         recyclerViewRides = findViewById(R.id.recycler_view_rides);
         recyclerViewRides.setLayoutManager(new LinearLayoutManager(this));
@@ -65,6 +74,7 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerViewRides.setAdapter(adapterRides);
 
         loadBikes();
+        loadParts();
         loadRides();
 
         checkAndCreatePartTypesNode();
@@ -222,6 +232,54 @@ public class DashboardActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    private void loadParts() {
+        String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).child("parts")
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        partList.clear();
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String partName = snapshot.child("partName").getValue(String.class);
+                            calculateTotalDistanceForPart(partName);
+                        }
+                        adapterParts.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("DashboardActivity", "Failed to load parts: ", databaseError.toException());
+                        Toast.makeText(DashboardActivity.this, "Error loading parts", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    private void calculateTotalDistanceForPart(String partName) {
+        String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).child("rides")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        double totalDistance = 0;
+                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                            List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+                            if (partsUsed != null && partsUsed.contains(partName)) {
+                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                totalDistance += Double.parseDouble(distanceStr);
+                            }
+                        }
+                        partList.add(new Part(partName, totalDistance));
+                        adapterParts.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.e("DashboardActivity", "Failed to calculate total distance for part: ", databaseError.toException());
+                    }
+                });
+    }
+
 
     public static class Ride {
         public String selectedBicycle;
