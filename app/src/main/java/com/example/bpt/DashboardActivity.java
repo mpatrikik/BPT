@@ -30,7 +30,7 @@ public class DashboardActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
     private RecyclerView recyclerViewRides, recyclerViewBikes, recyclerViewParts;
-    private ItemAdapter adapterRides;
+    private RideAdapter adapterRides;
     private BikeAdapter adapterBikes;
     private PartAdapter adapterParts;
     private List<String> bikeList;
@@ -70,7 +70,7 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerViewRides = findViewById(R.id.recycler_view_rides);
         recyclerViewRides.setLayoutManager(new LinearLayoutManager(this));
         rideList = new ArrayList<>();
-        adapterRides = new ItemAdapter(rideList);
+        adapterRides = new RideAdapter(rideList);
         recyclerViewRides.setAdapter(adapterRides);
 
         loadBikes();

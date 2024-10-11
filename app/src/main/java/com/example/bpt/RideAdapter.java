@@ -1,6 +1,5 @@
 package com.example.bpt;
 
-import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,10 +19,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
-public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
+public class RideAdapter extends RecyclerView.Adapter<RideAdapter.ViewHolder> {
     private List<DashboardActivity.Ride> rides;
 
-    public ItemAdapter(List<DashboardActivity.Ride> rides) { this.rides = rides; }
+    public RideAdapter(List<DashboardActivity.Ride> rides) { this.rides = rides; }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -82,7 +81,7 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ViewHolder> {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("ItemAdapter", "Error deleting ride: ", databaseError.toException());
+                Log.e("RideAdapter", "Error deleting ride: ", databaseError.toException());
             }
         });
     }
