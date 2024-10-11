@@ -19,11 +19,13 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 public class DashboardActivity extends AppCompatActivity {
 
@@ -222,6 +224,17 @@ public class DashboardActivity extends AppCompatActivity {
                             Ride ride = snapshot.getValue(Ride.class);
                             rideList.add(ride);
                         }
+                        Collections.sort(rideList, (r1, r2) -> {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+                            try {
+                                String dateTime1 = r1.getDate() + " " + r1.getTime();
+                                String dateTime2 = r2.getDate() + " " + r2.getTime();
+                                return sdf.parse(dateTime2).compareTo(sdf.parse(dateTime1));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            return 0;
+                        });
                         adapterRides.notifyDataSetChanged();
                     }
 
