@@ -23,22 +23,18 @@
 
         <activity
             android:name=".RegisterActivity">
-            <!--android:exported="true">-->
         </activity>
 
         <activity
-            android:name=".LoginActivity">
-            <!--android:exported="true">-->
+            android:name=".LoginActivity">>
         </activity>
 
         <activity
-            android:name=".DashboardActivity">
-            <!--android:exported="true">-->
+            android:name=".DashboardActivity">>
         </activity>
 
         <activity
             android:name=".AccountActivity">
-            <!--android:exported="true">-->
         </activity>
 
         <activity
@@ -51,6 +47,10 @@
 
         <activity
             android:name=".BikeAddingActivity">
+        </activity>
+
+        <activity
+            android:name=".BikeDetailsActivity">
         </activity>
 
     </application>

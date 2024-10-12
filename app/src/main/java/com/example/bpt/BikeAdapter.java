@@ -1,5 +1,6 @@
 package com.example.bpt;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,6 +33,13 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
         String totalDistance = distances.get(position);
         holder.bikeNameTextView.setText(bikeName);
         holder.bikedistanceTextView.setText(totalDistance + " km");
+
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), BikeDetailsActivity.class);
+            intent.putExtra("bike_name", bikeName);
+            intent.putExtra("total_distance", totalDistance);
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override
