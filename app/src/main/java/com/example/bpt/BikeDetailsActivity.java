@@ -1,7 +1,9 @@
 package com.example.bpt;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -31,11 +33,15 @@ public class BikeDetailsActivity extends AppCompatActivity {
     private List<DashboardActivity.Ride> rideList;
     private SwipeRefreshLayout swipeRefreshLayout;
     private DatabaseReference mDatabase;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bikedetails);
+
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         // Initialize Firebase and UI elements
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -70,10 +76,17 @@ public class BikeDetailsActivity extends AppCompatActivity {
             loadRidesForBike(bikeName);
             swipeRefreshLayout.setRefreshing(false);
         });
+
+        // Handle the homebutton click event
+        ImageButton homeButton = findViewById(R.id.home_button);
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void loadPartsForBike(String bikeName) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("parts")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
@@ -95,7 +108,7 @@ public class BikeDetailsActivity extends AppCompatActivity {
     }
 
     private void calculateTotalDistanceForPart(String partName, String bikeName) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("rides")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -120,7 +133,7 @@ public class BikeDetailsActivity extends AppCompatActivity {
     }
 
     private void loadRidesForBike(String bikeName) {
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("rides")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
