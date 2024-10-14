@@ -83,6 +83,20 @@ public class BikeDetailsActivity extends AppCompatActivity {
             Intent intent = new Intent(this, DashboardActivity.class);
             startActivity(intent);
         });
+
+        //Add parts button
+        ImageButton addPartsButton = findViewById(R.id.add_parts_button);
+        addPartsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, PartsaddingActivity.class);
+            startActivity(intent);
+        });
+
+        ImageButton addRidesButton = findViewById(R.id.add_rides_button);
+        addRidesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            startActivity(intent);
+        });
+
     }
 
     private void loadPartsForBike(String bikeName) {
