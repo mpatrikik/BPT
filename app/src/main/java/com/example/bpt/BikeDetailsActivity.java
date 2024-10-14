@@ -20,12 +20,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 public class BikeDetailsActivity extends AppCompatActivity {
 
     private TextView bikeNameTextView;
+    private TextView bikeTotalDistanceTextView;
     private RecyclerView recyclerViewParts, recyclerViewRides;
     private PartAdapter adapterParts;
     private RideAdapter adapterRides;
@@ -44,8 +49,8 @@ public class BikeDetailsActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
 
         // Initialize Firebase and UI elements
-        mDatabase = FirebaseDatabase.getInstance().getReference();
         bikeNameTextView = findViewById(R.id.bike_name_text_view);
+        bikeTotalDistanceTextView = findViewById(R.id.bike_totaldistance_text_view);
         recyclerViewParts = findViewById(R.id.recycler_view_parts);
         recyclerViewRides = findViewById(R.id.recycler_view_rides);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
@@ -69,11 +74,13 @@ public class BikeDetailsActivity extends AppCompatActivity {
         // Load data from database
         loadPartsForBike(bikeName);
         loadRidesForBike(bikeName);
+        calculateTotalDistanceForBike(bikeName);
 
         // Set swipe refresh listener
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadPartsForBike(bikeName);
             loadRidesForBike(bikeName);
+            calculateTotalDistanceForBike(bikeName);
             swipeRefreshLayout.setRefreshing(false);
         });
 
@@ -84,13 +91,14 @@ public class BikeDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        //Add parts button
+        //Handle the account button click event
         ImageButton addPartsButton = findViewById(R.id.add_parts_button);
         addPartsButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PartsaddingActivity.class);
             startActivity(intent);
         });
 
+        //Handle the add rides button click event
         ImageButton addRidesButton = findViewById(R.id.add_rides_button);
         addRidesButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
@@ -146,6 +154,32 @@ public class BikeDetailsActivity extends AppCompatActivity {
                 });
     }
 
+    private void calculateTotalDistanceForBike(String bikeName) {
+        String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).child("rides")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        double totalDistance = 0;
+                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                            String selectedBike = rideSnapshot.child("selectedBicycle").getValue(String.class);
+                            if (bikeName.equals(selectedBike)) {
+                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                totalDistance += Double.parseDouble(distanceStr);
+                            }
+                        }
+
+                        // Set total distance to the TextView
+                        bikeTotalDistanceTextView.setText(String.format(Locale.getDefault(), "%.1f km", totalDistance));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("BikeDetailsActivity", "Failed to calculate total distance: ", databaseError.toException());
+                    }
+                });
+    }
+
     private void loadRidesForBike(String bikeName) {
         String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("rides")
@@ -159,6 +193,17 @@ public class BikeDetailsActivity extends AppCompatActivity {
                                 rideList.add(ride);
                             }
                         }
+                        Collections.sort(rideList, (r1, r2) -> {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+                            try {
+                                String dateTime1 = r1.getDate() + " " + r1.getTime();
+                                String dateTime2 = r2.getDate() + " " + r2.getTime();
+                                return sdf.parse(dateTime2).compareTo(sdf.parse(dateTime1));
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            return 0;
+                        });
                         adapterRides.notifyDataSetChanged();
                     }
 

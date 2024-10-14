@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Bike name"
-                android:textSize="35sp"
+                android:textSize="30sp"
                 android:textColor="#6A6A6A"
                 android:textAlignment="center"
                 android:fontFamily="@font/lalezar_regular"
@@ -52,6 +52,21 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.5" />
+
+            <TextView
+                android:id="@+id/bike_totaldistance_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Total distance for this bike"
+                android:textSize="20sp"
+                android:textColor="#6A6A6A"
+                android:textAlignment="center"
+                android:fontFamily="@font/lalezar_regular"
+                app:layout_constraintVertical_bias="0.5"
+                app:layout_constraintTop_toBottomOf="@id/bike_name_text_view"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
