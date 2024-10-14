@@ -14,10 +14,12 @@ import java.util.List;
 public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
     private List<String> bikes;
     private List<String> distances;
+    private onBikeClickListener onBikeClickListener;
 
-    public BikeAdapter(List<String> bikes, List<String> distances) {
+    public BikeAdapter(List<String> bikes, List<String> distances, onBikeClickListener onBikeClickListener) {
         this.bikes = bikes;
         this.distances = distances;
+        this.onBikeClickListener = onBikeClickListener;
     }
 
     @NonNull
@@ -34,11 +36,16 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
         holder.bikeNameTextView.setText(bikeName);
         holder.bikedistanceTextView.setText(totalDistance + " km");
 
+//        holder.itemView.setOnClickListener(v -> {
+//            Intent intent = new Intent(v.getContext(), BikeDetailsActivity.class);
+//            intent.putExtra("bike_name", bikeName);
+//            intent.putExtra("total_distance", totalDistance);
+//            v.getContext().startActivity(intent);
+//        });
         holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), BikeDetailsActivity.class);
-            intent.putExtra("bike_name", bikeName);
-            intent.putExtra("total_distance", totalDistance);
-            v.getContext().startActivity(intent);
+            if (onBikeClickListener != null) {
+                onBikeClickListener.onBikeClick(bikeName);
+            }
         });
     }
 
@@ -56,5 +63,9 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
             bikeNameTextView = view.findViewById(R.id.bike_name_text_view);
             bikedistanceTextView = view.findViewById(R.id.bike_distance_text_view);
         }
+    }
+
+    public interface onBikeClickListener {
+        void onBikeClick(String bikeName);
     }
 }

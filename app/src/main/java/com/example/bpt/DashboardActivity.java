@@ -58,7 +58,11 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerViewBikes.setLayoutManager(new LinearLayoutManager(this));
         bikeList = new ArrayList<>();
         distanceList = new ArrayList<>();
-        adapterBikes = new BikeAdapter(bikeList, distanceList);
+        adapterBikes = new BikeAdapter(bikeList, distanceList, bikeName -> {
+            Intent intent = new Intent(this, BikeDetailsActivity.class);
+            intent.putExtra("bike_name", bikeName);
+            startActivity(intent);
+        });
         recyclerViewBikes.setAdapter(adapterBikes);
 
         // Recycler view for parts
