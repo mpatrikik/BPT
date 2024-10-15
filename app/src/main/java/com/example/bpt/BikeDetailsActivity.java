@@ -115,8 +115,11 @@ public class BikeDetailsActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         partList.clear();
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                            String partName = snapshot.child("partName").getValue(String.class);
-                            calculateTotalDistanceForPart(partName, bikeName);
+                            String bicycle = snapshot.child("bicycle").getValue(String.class);
+                            if (bikeName.equals(bicycle)) {
+                                String partName = snapshot.child("partName").getValue(String.class);
+                                calculateTotalDistanceForPart(partName, bikeName);;
+                            }
                         }
                         adapterParts.notifyDataSetChanged();
                     }
