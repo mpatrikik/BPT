@@ -12,17 +12,14 @@
 
     <ImageButton
         android:id="@+id/home_button"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_marginTop="6dp"
+        android:layout_marginStart="6dp"
         android:background="@null"
         android:scaleType="fitCenter"
         android:contentDescription="Logo"
         android:src="@drawable/home_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintWidth_percent="0.08"
-        app:layout_constraintHeight_percent="0.04"
-        app:layout_constraintHorizontal_bias="0.02"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />
