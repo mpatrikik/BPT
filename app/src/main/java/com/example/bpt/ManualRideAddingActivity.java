@@ -29,8 +29,11 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Locale;
 
 public class ManualRideAddingActivity extends AppCompatActivity {
 
@@ -400,6 +403,22 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             return;
         }
 
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+        try {
+            String rideDateTime = date + " " + time;
+            long rideTimeInMillis = sdf.parse(rideDateTime).getTime();
+            long currentTimeInMillis = System.currentTimeMillis();
+
+            if (rideTimeInMillis > currentTimeInMillis) {
+                Toast.makeText(this, "Enter valid date and time", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Invalid date or time format", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         // Ride ID létrehozása
         String userId = mAuth.getCurrentUser().getUid();
         String rideId = mDatabase.child("users").child(userId).child("rides").push().getKey();
@@ -420,40 +439,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             }
             saveRideToDatabase(selectedBicycle, rideTitle, date, time, distance, selectedPartsList);
         }
-
-//        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                if (!dataSnapshot.hasChild("bicycles")) {
-//                    // Ha nincs meg a bicycles séma, hozzuk létre
-//                    mDatabase.child("users").child(userId).child("bicycles").setValue(new ArrayList<>());
-//                }
-//                if (!dataSnapshot.hasChild("rides")) {
-//                    // Ha nincs meg a rides séma, hozzuk létre
-//                    mDatabase.child("users").child(userId).child("rides").setValue(new ArrayList<>());
-//                }
-//
-//                // Ride adatok mentése
-//                Ride ride = new Ride(selectedBicycle, rideTitle, date, time, distance, selectedPartsList);
-//                mDatabase.child("users").child(userId).child("rides").child(rideId).setValue(ride)
-//                        .addOnCompleteListener(task -> {
-//                            if (task.isSuccessful()) {
-//                                Toast.makeText(ManualRideAddingActivity.this, "Ride saved successfully", Toast.LENGTH_SHORT).show();
-//                                Intent intent = new Intent(ManualRideAddingActivity.this, DashboardActivity.class);
-//                                startActivity(intent);
-//                                finish();
-//                            } else {
-//                                Toast.makeText(ManualRideAddingActivity.this, "Failed to save ride", Toast.LENGTH_SHORT).show();
-//                            }
-//                        });
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//                Log.e("ManualRideAddingActivity", "Failed to load bikes: ", databaseError.toException());
-//                Toast.makeText(ManualRideAddingActivity.this, "Error loading bikes", Toast.LENGTH_SHORT).show();
-//            }
-//        });
     }
 
     private void saveRideToDatabase(String selectedBicycle, String rideTitle, String date, String time, String distance, ArrayList<String> selectedPartsList) {
