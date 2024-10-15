@@ -6,6 +6,8 @@ import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -91,7 +93,18 @@ public class BikeDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        //Handle the account button click event
+        // Handle the delete button click event
+        ImageButton deleteButton = findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete Bike")
+                    .setMessage("Are you sure you want to delete this bike and all related data?")
+                    .setPositiveButton("Yes", (dialog, which) -> deleteBikeAndRelatedData(bikeName))
+                    .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
+
+        //Handle the add parts button click event
         ImageButton addPartsButton = findViewById(R.id.add_parts_button);
         addPartsButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PartsaddingActivity.class);
@@ -212,6 +225,64 @@ public class BikeDetailsActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
+                    }
+                });
+    }
+
+    private void deleteBikeAndRelatedData(String bikeName) {
+        String userId = mAuth.getCurrentUser().getUid();
+
+        // 1. Delete current bike
+        mDatabase.child("users").child(userId).child("bicycles").orderByValue().equalTo(bikeName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot bikeSnapshot : dataSnapshot.getChildren()) {
+                            bikeSnapshot.getRef().removeValue();
+                        }
+                        Toast.makeText(BikeDetailsActivity.this, "Bike deleted", Toast.LENGTH_SHORT).show();
+                        finish(); // Close activity after deletion
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("BikeDetailsActivity", "Failed to delete bike: ", databaseError.toException());
+                    }
+                });
+
+        // 2. Delete parts for the current bike
+        mDatabase.child("users").child(userId).child("parts")
+                .orderByChild("bicycle").equalTo(bikeName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                            partSnapshot.getRef().removeValue();
+                        }
+                        Toast.makeText(BikeDetailsActivity.this, "Related parts deleted", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("BikeDetailsActivity", "Failed to delete parts: ", databaseError.toException());
+                    }
+                });
+
+        // 3. Delete rides for the current bike
+        mDatabase.child("users").child(userId).child("rides")
+                .orderByChild("selectedBicycle").equalTo(bikeName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                            rideSnapshot.getRef().removeValue();
+                        }
+                        Toast.makeText(BikeDetailsActivity.this, "Related rides deleted", Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("BikeDetailsActivity", "Failed to delete rides: ", databaseError.toException());
                     }
                 });
     }
