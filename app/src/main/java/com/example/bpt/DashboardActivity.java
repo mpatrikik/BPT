@@ -79,18 +79,22 @@ public class DashboardActivity extends AppCompatActivity {
         adapterRides = new RideAdapter(rideList);
         recyclerViewRides.setAdapter(adapterRides);
 
-        loadBikes();
-        loadParts();
-        loadRides();
-
-        checkAndCreatePartTypesNode();
-
-        //SwipeRefreshLayout settings
         swipeRefreshLayout.setOnRefreshListener(() -> {
             loadBikes();
+            loadParts();
             loadRides();
             swipeRefreshLayout.setRefreshing(false);
         });
+
+        recyclerViewBikes.addOnScrollListener(scrollListener);
+        recyclerViewParts.addOnScrollListener(scrollListener);
+        recyclerViewRides.addOnScrollListener(scrollListener);
+
+        loadBikes();
+        loadParts();
+        loadRides();
+        checkAndCreatePartTypesNode();
+
 
         //Account button
         ImageButton accountButton = findViewById(R.id.account_button);
@@ -124,6 +128,20 @@ public class DashboardActivity extends AppCompatActivity {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             startActivity(intent);
         });
+    }
+
+    private final RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+            // Only enable SwipeRefreshLayout if all RecyclerViews are at the top
+            swipeRefreshLayout.setEnabled(isRecyclerViewAtTop(recyclerViewBikes)
+                    && isRecyclerViewAtTop(recyclerViewParts)
+                    && isRecyclerViewAtTop(recyclerViewRides));
+        }
+    };
+
+    private boolean isRecyclerViewAtTop(RecyclerView recyclerView) {
+        return recyclerView != null && !recyclerView.canScrollVertically(-1);
     }
 
     private void checkAndCreatePartTypesNode() {
