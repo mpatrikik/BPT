@@ -348,21 +348,36 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                     String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
                     datePickerTextView.setText(selectedDate);
                 }, year, month, day);
+        datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
     }
 
     public void showTimePicker(View view) {
         final Calendar calendar = Calendar.getInstance();
-        int hour = calendar.get(Calendar.HOUR_OF_DAY);
-        int minute = calendar.get(Calendar.MINUTE);
+        int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
+        int currentMinute = calendar.get(Calendar.MINUTE);
 
-        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-                (view12, selectedHour, selectedMinute) -> {
-                    String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
-                    timePickerTextView.setText(selectedTime);
-                }, hour, minute, true);
-        timePickerDialog.show();
+        String selectedDate = datePickerTextView.getText().toString();
+
+        if (selectedDate.equals(new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(calendar.getTime()))) {
+            // Aktuális nap, csak a múltbeli vagy aktuális időpontokat engedjük
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+                    (view1, selectedHour, selectedMinute) -> {
+                        String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
+                        timePickerTextView.setText(selectedTime);
+                    }, currentHour, currentMinute, true);
+
+            timePickerDialog.show();
+        } else {
+            TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+                    (view12, selectedHour, selectedMinute) -> {
+                        String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
+                        timePickerTextView.setText(selectedTime);
+                    }, 0, 0, true);
+            timePickerDialog.show();
+        }
     }
+
 
     private void saveRide() {
         String selectedBicycle = ((Spinner) findViewById(R.id.bicycle_spinner)).getSelectedItem().toString();
