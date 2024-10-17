@@ -33,11 +33,8 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         DashboardActivity.Ride ride = rides.get(position);
-        holder.bicycleTextView.setText("Bicycle: " + ride.getSelectedBicycle());
-        holder.titleTextView.setText("Title: " + ride.getRideTitle());
-        holder.dateTextView.setText("Date: " + ride.getDate());
-        holder.timeTextView.setText("Time: " + ride.getTime());
-        holder.distanceTextView.setText("Distance: " + ride.getDistance() + " km");
+        holder.titleTextView.setText(ride.getRideTitle());
+        holder.bicycleTextView.setText(ride.getSelectedBicycle());
 
         if(ride.selectedParts() != null && !ride.selectedParts.isEmpty()) {
             holder.partsTextView.setVisibility(View.VISIBLE);
@@ -45,6 +42,11 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.ViewHolder> {
         } else {
             holder.partsTextView.setVisibility(View.GONE);
         }
+        holder.distanceTextView.setText(ride.getDistance() + " km");
+        holder.dateTextView.setText(ride.getDate());
+        holder.timeTextView.setText(ride.getTime());
+
+
 
 
         holder.itemView.setOnLongClickListener(v -> {
@@ -90,21 +92,23 @@ public class RideAdapter extends RecyclerView.Adapter<RideAdapter.ViewHolder> {
     public int getItemCount() { return rides.size(); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView bicycleTextView;
         public TextView titleTextView;
+        public TextView bicycleTextView;
+        public TextView partsTextView;
+        public TextView distanceTextView;
         public TextView dateTextView;
         public TextView timeTextView;
-        public TextView distanceTextView;
-        public TextView partsTextView;
 
         public ViewHolder(View view) {
             super(view);
-            bicycleTextView = view.findViewById(R.id.bicycle_text_view);
             titleTextView = view.findViewById(R.id.title_text_view);
+            bicycleTextView = view.findViewById(R.id.bicycle_text_view);
+            partsTextView = view.findViewById(R.id.parts_text_view);
+            distanceTextView = view.findViewById(R.id.distance_text_view);
             dateTextView = view.findViewById(R.id.date_text_view);
             timeTextView = view.findViewById(R.id.time_text_view);
-            distanceTextView = view.findViewById(R.id.distance_text_view);
-            partsTextView = view.findViewById(R.id.parts_text_view);
+
+
         }
     }
 }
