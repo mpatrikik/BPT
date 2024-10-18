@@ -61,7 +61,7 @@
 
             <TextView
                 android:id="@+id/bike_name_text_view"
-                android:layout_width="wrap_content"
+                android:layout_width="270dp"
                 android:layout_height="wrap_content"
                 android:text="Bike name"
                 android:textSize="30sp"
