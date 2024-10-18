@@ -108,6 +108,7 @@ public class BikeDetailsActivity extends AppCompatActivity {
         ImageButton addPartsButton = findViewById(R.id.add_parts_button);
         addPartsButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, PartsaddingActivity.class);
+            intent.putExtra("selected_bike_name", bikeName);
             startActivity(intent);
         });
 

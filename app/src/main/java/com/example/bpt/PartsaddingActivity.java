@@ -35,7 +35,7 @@ public class PartsaddingActivity extends AppCompatActivity {
     private EditText partNameEditText;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
-    private String userId;
+    private String userId, selectedBike;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,11 +59,20 @@ public class PartsaddingActivity extends AppCompatActivity {
         bicycleSpinner = findViewById(R.id.bicycle_spinner);
         partTypeSpinner = findViewById(R.id.part_type_spinner);
         addPartButton = findViewById(R.id.add_part_button);
-        partNameEditText = findViewById(R.id.part_name_edittext);  // Using the existing part_name_edittext
+        partNameEditText = findViewById(R.id.part_name_edittext);
         bicycleList = new ArrayList<>();
         partTypeList = new ArrayList<>();
 
-        loadBicycles();
+        selectedBike = getIntent().getStringExtra("selected_bike_name");
+        if (selectedBike != null) {
+            bicycleList.add(selectedBike);
+            bicycleSpinner.setEnabled(false);
+        } else {
+            loadBicycles();
+        }
+
+
+        //loadBicycles();
         checkAndCreatePartTypesNode();
         checkAndCreatePartsNode();
 
@@ -85,21 +94,7 @@ public class PartsaddingActivity extends AppCompatActivity {
         partNameEditText.addTextChangedListener(inputWatcher);
 
         // Spinner események figyelése
-        bicycleSpinner.setOnItemSelectedListener(spinnerWatcher);
         partTypeSpinner.setOnItemSelectedListener(spinnerWatcher);
-
-        bicycleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedBicycle = bicycleList.get(position);
-                if ("Add new bicycle".equals(selectedBicycle)) {
-                    showAddBicycleDialog();
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) { }
-        });
 
         partTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
