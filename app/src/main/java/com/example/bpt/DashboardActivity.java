@@ -116,6 +116,12 @@ public class DashboardActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        //Sync with Strava button
+        ImageButton syncWithStravaButton = findViewById(R.id.sync_with_strava_button);
+        syncWithStravaButton.setOnClickListener(v -> {
+            Toast.makeText(this, "Not working yet!\nUnder implementation", Toast.LENGTH_SHORT).show();
+        });
+
         //Add parts button
         ImageButton addPartsButton = findViewById(R.id.add_parts_button);
         addPartsButton.setOnClickListener(v -> {
@@ -133,7 +139,6 @@ public class DashboardActivity extends AppCompatActivity {
     private final RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {
         @Override
         public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-            // Only enable SwipeRefreshLayout if all RecyclerViews are at the top
             swipeRefreshLayout.setEnabled(isRecyclerViewAtTop(recyclerViewBikes)
                     && isRecyclerViewAtTop(recyclerViewParts)
                     && isRecyclerViewAtTop(recyclerViewRides));
