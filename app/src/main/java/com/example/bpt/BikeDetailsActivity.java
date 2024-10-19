@@ -31,8 +31,7 @@ import java.util.Locale;
 
 public class BikeDetailsActivity extends AppCompatActivity {
 
-    private TextView bikeNameTextView;
-    private TextView bikeTotalDistanceTextView;
+    private TextView bikeNameTextView, bikeTotalDistanceTextView;
     private RecyclerView recyclerViewParts, recyclerViewRides;
     private PartAdapter adapterParts;
     private RideAdapter adapterRides;
@@ -116,6 +115,7 @@ public class BikeDetailsActivity extends AppCompatActivity {
         ImageButton addRidesButton = findViewById(R.id.add_rides_button);
         addRidesButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            intent.putExtra("selected_bike_name", bikeName);
             startActivity(intent);
         });
 

@@ -41,13 +41,11 @@ public class ManualRideAddingActivity extends AppCompatActivity {
     private ArrayList<String> partList;
     private ArrayAdapter<String> adapter;
     private boolean[] selectedParts;
+    private boolean isFirstSelection = true;
     private ArrayList<Integer> selectedPartsIndexes = new ArrayList<>();
-    private String userId;
+    private String userId, selectedBike;
     private DatabaseReference mDatabase;
-    //private Spinner bicycleSpinner;
-    private TextView selectedPartsTextView;
-    private TextView datePickerTextView;
-    private TextView timePickerTextView;
+    private TextView selectedPartsTextView, datePickerTextView, timePickerTextView;;
     private FirebaseAuth mAuth;
 
     @Override
@@ -143,6 +141,18 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             userId = currentUser.getUid();
             Log.d("ManualRideAdding", "User ID: " + userId);
             checkAndCreateUser(userId);
+        }
+
+        selectedBike = getIntent().getStringExtra("selected_bike_name");
+        if (selectedBike != null) {
+            bicycleList.clear();
+            bicycleList.add(selectedBike);
+            adapter.notifyDataSetChanged();
+            bicycleSpinner.setSelection(0);
+            bicycleSpinner.setEnabled(true);
+            Log.d("ManualRideAddingActivity", "Selected bike: " + bicycleList.toString());
+        } else {
+            loadBicycles();
         }
 
         // Spinner esemény kezelése: új kerékpár hozzáadása ha a "+"-ra kattint
