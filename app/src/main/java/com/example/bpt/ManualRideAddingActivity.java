@@ -198,7 +198,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                         }
 
                         if (partList.isEmpty()) {
-                            Toast.makeText(ManualRideAddingActivity.this, "Ehhez a kerékpárhoz nincs elérhető alkatrész.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManualRideAddingActivity.this, "No parts available for this bicycle..", Toast.LENGTH_SHORT).show();
                         } else {
                             // A többválasztásos lista beállítása
                             selectedParts = new boolean[partList.size()];
