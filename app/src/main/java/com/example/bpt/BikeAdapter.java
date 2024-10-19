@@ -30,20 +30,21 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String bikeName = bikes.get(position);
-        String totalDistance = distances.get(position);
-        holder.bikeNameTextView.setText(bikeName);
-        holder.bikedistanceTextView.setText(totalDistance + " km");
-
-        holder.itemView.setOnClickListener(v -> {
-            if (onBikeClickListener != null) {
-                onBikeClickListener.onBikeClick(bikeName);
-            }
-        });
+        if (position < bikes.size() && position < distances.size()) {
+            String bikeName = bikes.get(position);
+            String totalDistance = distances.get(position);
+            holder.bikeNameTextView.setText(bikeName);
+            holder.bikedistanceTextView.setText(totalDistance + " km");
+            holder.itemView.setOnClickListener(v -> {
+                if (onBikeClickListener != null) {
+                    onBikeClickListener.onBikeClick(bikeName);
+                }
+            });
+        }
     }
 
     @Override
-    public int getItemCount() { return bikes.size(); }
+    public int getItemCount() { return Math.min(bikes.size(), distances.size()); }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView bikeNameTextView;

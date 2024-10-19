@@ -235,6 +235,7 @@ public class DashboardActivity extends AppCompatActivity {
                         }
                         bikeList.add(bikeName);
                         distanceList.add(formattedDistance);
+                        Log.d("DashboardActivity", "Bike: " + bikeName + ", Total Distance: " + formattedDistance);
                         adapterBikes.notifyDataSetChanged();
                     }
 
