@@ -7,7 +7,6 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -59,10 +58,16 @@ public class BikeDetailsActivity extends AppCompatActivity {
         recyclerViewParts.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewRides.setLayoutManager(new LinearLayoutManager(this));
 
-        partList = new ArrayList<>();
+
         rideList = new ArrayList<>();
 
-        adapterParts = new PartAdapter(partList);
+        partList = new ArrayList<>();
+        adapterParts = new PartAdapter(partList, partName -> {
+            Intent intent = new Intent(this, PartDetailsActivity.class);
+            intent.putExtra("part_name", partName);
+            startActivity(intent);
+        });
+
         adapterRides = new RideAdapter(rideList);
 
         recyclerViewParts.setAdapter(adapterParts);

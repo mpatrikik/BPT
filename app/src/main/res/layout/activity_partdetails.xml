@@ -225,10 +225,10 @@
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/add_rides_button" />
+                        app:layout_constraintEnd_toStartOf="@id/add_ride_button" />
 
                     <ImageButton
-                        android:id="@+id/add_rides_button"
+                        android:id="@+id/add_ride_button"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
                         android:layout_marginStart="15dp"

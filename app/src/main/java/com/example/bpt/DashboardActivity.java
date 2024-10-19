@@ -69,7 +69,12 @@ public class DashboardActivity extends AppCompatActivity {
         recyclerViewParts = findViewById(R.id.recycler_view_parts);
         recyclerViewParts.setLayoutManager(new LinearLayoutManager(this));
         partList = new ArrayList<>();
-        adapterParts = new PartAdapter(partList);
+        distanceList = new ArrayList<>();
+        adapterParts = new PartAdapter(partList, partName -> {
+            Intent intent = new Intent(this, PartDetailsActivity.class);
+            intent.putExtra("part_name", partName);
+            startActivity(intent);
+        });
         recyclerViewParts.setAdapter(adapterParts);
 
         //Recycler view for rides
