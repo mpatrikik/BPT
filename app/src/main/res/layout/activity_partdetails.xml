@@ -53,7 +53,7 @@
 
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/part_name_totaldistance_layout"
+            android:id="@+id/partname_usedbike_totaldistance_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_marginTop="20dp"
@@ -73,20 +73,47 @@
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintVertical_bias="0.5" />
 
-            <TextView
-                android:id="@+id/used_bike_text_view"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Used bike"
-                android:textSize="20sp"
-                android:textColor="#6A6A6A"
-                android:textAlignment="center"
-                android:fontFamily="@font/lalezar_regular"
-                app:layout_constraintVertical_bias="0.5"
-                app:layout_constraintTop_toBottomOf="@id/part_name_text_view"
+                android:orientation="horizontal"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                />
+                app:layout_constraintTop_toBottomOf="@id/part_name_text_view">
+
+                <TextView
+                    android:id="@+id/used_bike_forcurrentpart_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Used bike"
+                    android:textSize="20sp"
+                    android:textColor="#6A6A6A"
+                    android:layout_marginEnd="5dp"
+                    android:textAlignment="center"
+                    android:fontFamily="@font/lalezar_regular"
+                    />
+
+                <View
+                    android:id="@+id/vertical_line1"
+                    android:layout_width="2dp"
+                    android:layout_height="match_parent"
+                    android:background="#808080"
+                    android:layout_marginEnd="5dp" />
+
+                <TextView
+                    android:id="@+id/part_totaldistance_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total distance for this part"
+                    android:textSize="20sp"
+                    android:textColor="#6A6A6A"
+                    android:textAlignment="center"
+                    android:fontFamily="@font/lalezar_regular"
+                    />
+
+            </LinearLayout>
+
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -96,7 +123,7 @@
             android:padding="0dp"
             android:layout_marginTop="10dp"
             android:scrollbars="none"
-            app:layout_constraintTop_toBottomOf="@id/part_name_totaldistance_layout"
+            app:layout_constraintTop_toBottomOf="@id/partname_usedbike_totaldistance_layout"
             app:layout_constraintBottom_toBottomOf="parent">
 
             <androidx.constraintlayout.widget.ConstraintLayout
