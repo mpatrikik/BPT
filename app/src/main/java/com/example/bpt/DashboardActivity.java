@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -192,18 +193,30 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     private void loadBikes() {
-        String userId = mAuth.getCurrentUser().getUid();  // Get current user ID
+        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("bicycles")
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         bikeList.clear();
                         distanceList.clear();
+                        final int totalBikes = (int) dataSnapshot.getChildrenCount();
+                        final int[] processedBikes = {0};
+                        Log.d("DashboardActivity", "Total bikes: " + totalBikes);
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             String bikeName = snapshot.getValue(String.class);
-                            calculateTotalDistanceForBike(bikeName);
+                            Log.d("DashboardActivity", "Bike found: " + bikeName);
+                            calculateTotalDistanceForBike(bikeName, new OnBikeDistanceCalculated() {
+                                @Override
+                                public void onCalculated() {
+                                    processedBikes[0]++; // Növeli a feldolgozott biciklik számát
+                                    if (processedBikes[0] == totalBikes) {
+                                        Log.d("DashboardActivity", "Bike calculated" + bikeName);
+                                        adapterBikes.notifyDataSetChanged();
+                                    }
+                                }
+                            });
                         }
-                        adapterBikes.notifyDataSetChanged();
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -213,7 +226,7 @@ public class DashboardActivity extends AppCompatActivity {
                 });
     }
 
-    private void calculateTotalDistanceForBike(String bikeName) {
+    private void calculateTotalDistanceForBike(String bikeName, OnBikeDistanceCalculated callback) {
         String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("rides")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -227,6 +240,7 @@ public class DashboardActivity extends AppCompatActivity {
                                 totalDistance += Double.parseDouble(distanceStr);
                             }
                         }
+                        //Log.d("DashboardActivity", "Bike: " + bikeName + ": " + totalDistance);
                         String formattedDistance;
                         if (totalDistance % 1 == 0) {
                             formattedDistance = String.format("%.0f", totalDistance);
@@ -235,8 +249,9 @@ public class DashboardActivity extends AppCompatActivity {
                         }
                         bikeList.add(bikeName);
                         distanceList.add(formattedDistance);
-                        Log.d("DashboardActivity", "Bike: " + bikeName + ", Total Distance: " + formattedDistance);
+                        Log.d("DashboardActivity", "bikeList size: " + bikeList.size() + ", distanceList size: " + distanceList.size());
                         adapterBikes.notifyDataSetChanged();
+                        callback.onCalculated();
                     }
 
                     @Override
@@ -244,6 +259,10 @@ public class DashboardActivity extends AppCompatActivity {
                         Log.e("DashboardActivity", "Failed to calculate total distance: ", databaseError.toException());
                     }
                 });
+    }
+
+    interface OnBikeDistanceCalculated {
+        void onCalculated();
     }
 
     private void loadRides() {

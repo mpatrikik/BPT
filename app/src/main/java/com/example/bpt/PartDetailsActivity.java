@@ -88,6 +88,22 @@ public class PartDetailsActivity extends AppCompatActivity {
         calculateTotalDistanceForPart(partName);
         loadRidesForPart(partName);
 
+        ImageButton homeButton = findViewById(R.id.home_button);
+        homeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, DashboardActivity.class);
+            startActivity(intent);
+        });
+
+        ImageButton deleteButton = findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle("Delete Bike")
+                    .setMessage("Are you sure you want to delete this bike and all related data?")
+                    .setPositiveButton("Yes", (dialog, which) -> deletePartAndRelatedData(partName))
+                    .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                    .show();
+        });
+
     }
 
     private void loadBikesForPart(String partName) {
@@ -166,6 +182,25 @@ public class PartDetailsActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         Log.e("PartDetailsActivity", "Failed to load rides: ", databaseError.toException());
+                    }
+                });
+    }
+
+    private void deletePartAndRelatedData(String partName) {
+        String userId = mAuth.getCurrentUser().getUid();
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot bikeSnapshot : dataSnapshot.getChildren()) {
+                            bikeSnapshot.getRef().removeValue();
+                        }
+                        Toast.makeText(PartDetailsActivity.this, "Part deleted", Toast.LENGTH_SHORT).show();
+                        finish(); // Close activity after deletion
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to delete bike: ", databaseError.toException());
                     }
                 });
     }

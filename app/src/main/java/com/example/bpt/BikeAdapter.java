@@ -1,5 +1,6 @@
 package com.example.bpt;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,6 +34,7 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
         if (position < bikes.size() && position < distances.size()) {
             String bikeName = bikes.get(position);
             String totalDistance = distances.get(position);
+            Log.d("BikeAdapter", "Displaying bike: " + bikeName + ", Distance: " + totalDistance);
             holder.bikeNameTextView.setText(bikeName);
             holder.bikedistanceTextView.setText(totalDistance + " km");
             holder.itemView.setOnClickListener(v -> {
@@ -40,11 +42,16 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
                     onBikeClickListener.onBikeClick(bikeName);
                 }
             });
+        } else {
+            Log.d("BikeAdapter", "Invalid position: " + position + ", bikes size: " + bikes.size() + ", distances size: " + distances.size());
         }
     }
 
     @Override
-    public int getItemCount() { return Math.min(bikes.size(), distances.size()); }
+    public int getItemCount() {
+        Log.d("BikeAdapter", "Item count: " + Math.min(bikes.size(), distances.size()));
+        return Math.min(bikes.size(), distances.size());
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public TextView bikeNameTextView;
@@ -54,6 +61,7 @@ public class BikeAdapter extends RecyclerView.Adapter<BikeAdapter.ViewHolder> {
             super(view);
             bikeNameTextView = view.findViewById(R.id.bike_name_text_view);
             bikedistanceTextView = view.findViewById(R.id.bike_distance_text_view);
+            Log.d("BikeAdapter", "ViewHolder initialized with TextViews");
         }
     }
 
