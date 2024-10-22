@@ -99,11 +99,17 @@ public class PartDetailsActivity extends AppCompatActivity {
             new AlertDialog.Builder(this)
                     .setTitle("Delete Bike")
                     .setMessage("Are you sure you want to delete this bike and all related data?")
-                    .setPositiveButton("Yes", (dialog, which) -> deletePartAndRelatedData(partName))
+                    .setPositiveButton("Yes", (dialog, which) -> deletePart(partName))
                     .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
                     .show();
         });
 
+        ImageButton addRidesButton = findViewById(R.id.add_ride_button);
+        addRidesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            intent.putExtra("selected_part_name", partName);
+            startActivity(intent);
+        });
     }
 
     private void loadBikesForPart(String partName) {
@@ -186,7 +192,7 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
-    private void deletePartAndRelatedData(String partName) {
+    private void deletePart(String partName) {
         String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
