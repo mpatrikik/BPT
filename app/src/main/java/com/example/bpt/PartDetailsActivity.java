@@ -104,16 +104,24 @@ public class PartDetailsActivity extends AppCompatActivity {
                     .show();
         });
 
-        ImageButton addRidesButton = findViewById(R.id.add_ride_button);
-        addRidesButton.setOnClickListener(v -> {
+        addRideButton = findViewById(R.id.add_ride_button);
+        addRideButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             intent.putExtra("selected_part_name", partName);
             startActivity(intent);
         });
+
+        addServiceButton = findViewById(R.id.add_service_button);
+        addServiceButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ServiceAddingActivity.class);
+            intent.putExtra("selected_part_name", partName);
+            startActivity(intent);
+        });
+
     }
 
     private void loadBikesForPart(String partName) {
-        //String userId = mAuth.getCurrentUser().getUid();
+        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("parts")
                 .orderByChild("partName").equalTo(partName)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
