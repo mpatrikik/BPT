@@ -1,7 +1,11 @@
 package com.example.bpt;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,19 +25,18 @@ public class ServiceAddingActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
     private String partName, userId;
+    private EditText serviceNameEditText, valueEditText;
+    private Switch repeateSwitch;
+    private ImageButton submitButton, backButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_serviceadding);
 
-        TextView titleTextView = findViewById(R.id.title_text_view);
-        titleTextView.setText("New service interval");
-
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
-        // Retrieve part name from intent
         partName = getIntent().getStringExtra("selected_part_name");
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
@@ -44,6 +47,23 @@ public class ServiceAddingActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        backButton = findViewById(R.id.back_button);
+        serviceNameEditText = findViewById(R.id.serviceinterval_name_edit_text);
+        valueEditText = findViewById(R.id.value_edit_text);
+        repeateSwitch = findViewById(R.id.repeat_switch);
+        submitButton = findViewById(R.id.submit_service_interval_button);
+
+        repeateSwitch.setChecked(true);
+
+        backButton.setOnClickListener(v -> {
+            // Visszalép a PartDetailsActivity-be
+            Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
+            intent.putExtra("part_name", partName);
+            startActivity(intent);
+        });
+
+        submitButton.setOnClickListener(v -> { saveServiceInterval(); });
 
         checkAndCreateServicesNode();
     }
@@ -57,23 +77,97 @@ public class ServiceAddingActivity extends AppCompatActivity {
                     for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
                         DatabaseReference servicesRef = partSnapshot.child("services").getRef();
                         if (!partSnapshot.hasChild("services")) {
-                            DatabaseReference newservicesRef = servicesRef.push();
-                            newservicesRef.child("serviecName").setValue("New service");
+                            servicesRef.setValue("");
                             Toast.makeText(ServiceAddingActivity.this, "Services node created", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(ServiceAddingActivity.this, "Services node already exists", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else {
                     Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("ServiceAddingActivity", "Error checking services node", databaseError.toException());
             }
         });
     }
+
+    private void saveServiceInterval() {
+        String serviceName = serviceNameEditText.getText().toString().trim();
+        String value = valueEditText.getText().toString().trim();
+        boolean isRepeat = repeateSwitch.isChecked();
+
+        if (serviceName.isEmpty() || value.isEmpty()) {
+            Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                DatabaseReference servicesRef = partSnapshot.child("services").getRef();
+
+                                // Új szerviz node létrehozása
+                                DatabaseReference newServiceRef = servicesRef.push();
+                                newServiceRef.child("serviceName").setValue(serviceName);
+                                newServiceRef.child("serviceValueKm").setValue(value);
+
+                                // Repeat vagy maxLife beállítása a kapcsoló alapján
+                                if (isRepeat) {
+                                    newServiceRef.child("serviceInterval").child("repeat").setValue("repeat");
+                                } else {
+                                    newServiceRef.child("serviceInterval").child("repeat").setValue("maxLife: " + value);
+                                }
+
+                                Toast.makeText(ServiceAddingActivity.this, "Service interval saved", Toast.LENGTH_SHORT).show();
+
+                                // Visszalépünk a PartDetailsActivity-be
+                                Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
+                                intent.putExtra("part_name", partName);
+                                startActivity(intent);
+                            }
+                        } else {
+                            Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("ServiceAddingActivity", "Error saving service interval", databaseError.toException());
+
+                    }
+                });
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
