@@ -6,7 +6,6 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -20,7 +19,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-public class ServiceAddingActivity extends AppCompatActivity {
+public class ServiceIntervalAddingActivity extends AppCompatActivity {
 
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
@@ -32,7 +31,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_serviceadding);
+        setContentView(R.layout.activity_serviceintervaladding);
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
@@ -50,7 +49,10 @@ public class ServiceAddingActivity extends AppCompatActivity {
 
         backButton = findViewById(R.id.back_button);
         serviceNameEditText = findViewById(R.id.serviceinterval_name_edit_text);
+
         valueEditText = findViewById(R.id.value_edit_text);
+
+
         repeateSwitch = findViewById(R.id.repeat_switch);
         submitButton = findViewById(R.id.submit_service_interval_button);
 
@@ -58,7 +60,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
 
         backButton.setOnClickListener(v -> {
             // Visszalép a PartDetailsActivity-be
-            Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
+            Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
             intent.putExtra("part_name", partName);
             startActivity(intent);
         });
@@ -78,11 +80,11 @@ public class ServiceAddingActivity extends AppCompatActivity {
                         DatabaseReference servicesRef = partSnapshot.child("services").getRef();
                         if (!partSnapshot.hasChild("services")) {
                             servicesRef.setValue("");
-                            Toast.makeText(ServiceAddingActivity.this, "Services node created", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ServiceIntervalAddingActivity.this, "Services node created", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else {
-                    Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ServiceIntervalAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
@@ -122,15 +124,15 @@ public class ServiceAddingActivity extends AppCompatActivity {
                                     newServiceRef.child("serviceInterval").child("repeat").setValue("maxLife: " + value);
                                 }
 
-                                Toast.makeText(ServiceAddingActivity.this, "Service interval saved", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved", Toast.LENGTH_SHORT).show();
 
                                 // Visszalépünk a PartDetailsActivity-be
-                                Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
+                                Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
                                 intent.putExtra("part_name", partName);
                                 startActivity(intent);
                             }
                         } else {
-                            Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ServiceIntervalAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -142,32 +144,3 @@ public class ServiceAddingActivity extends AppCompatActivity {
                 });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

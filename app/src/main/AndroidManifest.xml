@@ -40,7 +40,7 @@
 
         <activity android:name=".PartDetailsActivity"> </activity>
 
-        <activity android:name=".ServiceAddingActivity"> </activity>
+        <activity android:name=".ServiceIntervalAddingActivity"> </activity>
     </application>
 
 </manifest>
