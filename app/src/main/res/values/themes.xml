@@ -4,6 +4,10 @@
         <item name="colorPrimary">@color/backgroundcolortop</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:textColorLink">@color/backgroundcolortop</item>
+
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <style name="Theme.BPT" parent="Base.Theme.BPT" />

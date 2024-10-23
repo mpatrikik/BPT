@@ -2,6 +2,8 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -24,7 +26,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
     private String partName, userId;
-    private EditText serviceNameEditText, valueEditText;
+    private EditText serviceIntervalNameEditText, valueEditText;
     private Switch repeateSwitch;
     private ImageButton submitButton, backButton;
 
@@ -48,18 +50,18 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
         }
 
         backButton = findViewById(R.id.back_button);
-        serviceNameEditText = findViewById(R.id.serviceinterval_name_edit_text);
-
+        serviceIntervalNameEditText = findViewById(R.id.serviceinterval_name_edit_text);
         valueEditText = findViewById(R.id.value_edit_text);
-
-
         repeateSwitch = findViewById(R.id.repeat_switch);
-        submitButton = findViewById(R.id.submit_service_interval_button);
-
         repeateSwitch.setChecked(true);
+        submitButton = findViewById(R.id.submit_service_interval_button);
+        submitButton.setEnabled(false);
+        submitButton.setAlpha(0.5f);
+
+        serviceIntervalNameEditText.addTextChangedListener(inputWatcher);
+        valueEditText.addTextChangedListener(inputWatcher);
 
         backButton.setOnClickListener(v -> {
-            // Visszalép a PartDetailsActivity-be
             Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
             intent.putExtra("part_name", partName);
             startActivity(intent);
@@ -68,6 +70,29 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
         submitButton.setOnClickListener(v -> { saveServiceInterval(); });
 
         checkAndCreateServicesNode();
+    }
+
+    private final TextWatcher inputWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+            checkInputs();
+        }
+        @Override
+        public void afterTextChanged(Editable s) {}
+    };
+
+    private void checkInputs() {
+        String serviceName = serviceIntervalNameEditText.getText().toString().trim();
+        String value = valueEditText.getText().toString().trim();
+        if (!serviceName.isEmpty() && !value.isEmpty()) {
+            submitButton.setEnabled(true);
+            submitButton.setAlpha(1.0f); // Gomb teljesen láthatóvá válik
+        } else {
+            submitButton.setEnabled(false);
+            submitButton.setAlpha(0.5f); // Gomb halvány marad
+        }
     }
 
     private void checkAndCreateServicesNode() {
@@ -95,7 +120,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
     }
 
     private void saveServiceInterval() {
-        String serviceName = serviceNameEditText.getText().toString().trim();
+        String serviceName = serviceIntervalNameEditText.getText().toString().trim();
         String value = valueEditText.getText().toString().trim();
         boolean isRepeat = repeateSwitch.isChecked();
 
@@ -119,9 +144,11 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
 
                                 // Repeat vagy maxLife beállítása a kapcsoló alapján
                                 if (isRepeat) {
-                                    newServiceRef.child("serviceInterval").child("repeat").setValue("repeat");
+                                    newServiceRef.child("serviceInterval").child("isRepeat").setValue(true);
+                                    newServiceRef.child("serviceInterval").child("maxLife").setValue(false);
                                 } else {
-                                    newServiceRef.child("serviceInterval").child("repeat").setValue("maxLife: " + value);
+                                    newServiceRef.child("serviceInterval").child("isRepeat").setValue(false);
+                                    newServiceRef.child("serviceInterval").child("maxLife").setValue(value);
                                 }
 
                                 Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved", Toast.LENGTH_SHORT).show();
