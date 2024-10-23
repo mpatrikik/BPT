@@ -97,8 +97,8 @@ public class PartDetailsActivity extends AppCompatActivity {
         ImageButton deleteButton = findViewById(R.id.delete_button);
         deleteButton.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
-                    .setTitle("Delete Bike")
-                    .setMessage("Are you sure you want to delete this bike and all related data?")
+                    .setTitle("Delete Part")
+                    .setMessage("Are you sure you want to delete this part?")
                     .setPositiveButton("Yes", (dialog, which) -> deletePart(partName))
                     .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
                     .show();
