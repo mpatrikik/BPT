@@ -4,5 +4,8 @@
     <color name="grey">#FF808080</color>
     <color name="white">#FFFFFFFF</color>
     <color name="backgroundcolortop">#FF8000</color>
+    <color name="backgroundcolorbottom">#FFCB96</color>
+    <color name="transparent">#00FF0000</color>
+
 
 </resources>
