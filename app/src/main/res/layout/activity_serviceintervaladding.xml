@@ -88,29 +88,50 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/interval_text_view" />
 
+        <LinearLayout
+            android:id="@+id/repeat_things_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/value_edit_text">
+
         <TextView
             android:id="@+id/repeat_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Repeat"
+            android:visibility="visible"
             android:fontFamily="@font/averagesans_regular"
             android:textStyle="bold"
             android:textSize="25sp"
             android:textColor="@color/black"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="30dp"
-            app:layout_constraintTop_toBottomOf="@id/value_edit_text"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:layout_marginTop="30dp" />
 
         <Switch
             android:id="@+id/repeat_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
-            android:layout_marginTop="35dp"
-            app:layout_constraintStart_toEndOf="@id/repeat_text_view"
-            app:layout_constraintTop_toBottomOf="@id/value_edit_text"
+            android:layout_marginTop="27dp"
             tools:ignore="UseSwitchCompatOrMaterialXml" />
+
+        <TextView
+            android:id="@+id/maxlife_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Max life"
+            android:fontFamily="@font/averagesans_regular"
+            android:textStyle="bold"
+            android:textSize="25sp"
+            android:textColor="@color/black"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="30dp"
+            android:visibility="gone" />
+
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/submit_service_interval_button"
@@ -121,7 +142,7 @@
             android:scaleType="fitCenter"
             android:src="@drawable/submitbutton"
             android:layout_marginTop="50dp"
-            app:layout_constraintTop_toBottomOf="@id/repeat_switch"
+            app:layout_constraintTop_toBottomOf="@id/repeat_things_layout"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 

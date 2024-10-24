@@ -5,9 +5,11 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -60,6 +62,22 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
 
         serviceIntervalNameEditText.addTextChangedListener(inputWatcher);
         valueEditText.addTextChangedListener(inputWatcher);
+
+        repeateSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            TextView repeatTextView = findViewById(R.id.repeat_text_view);
+            TextView maxLifeTextView = findViewById(R.id.maxlife_text_view);
+                    if (isChecked) {
+                        serviceIntervalNameEditText.setText("");
+                        serviceIntervalNameEditText.setHint("Name");
+                        maxLifeTextView.setVisibility(View.GONE);
+                        repeatTextView.setAlpha(1.0f);
+                    } else {
+                        serviceIntervalNameEditText.setText("Max life");
+                        maxLifeTextView.setVisibility(View.VISIBLE);
+                        repeatTextView.setAlpha(0.0f);
+                    }
+                    checkInputs();
+                });
 
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
