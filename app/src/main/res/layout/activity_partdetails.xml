@@ -177,7 +177,7 @@
 
                 <!-- Alkatrészek RecyclerView -->
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_view_services"
+                    android:id="@+id/recycler_view_service_intervals"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="15dp"
@@ -195,7 +195,7 @@
                     android:layout_height="2dp"
                     android:layout_marginTop="16dp"
                     android:background="#808080"
-                    app:layout_constraintTop_toBottomOf="@id/recycler_view_services"
+                    app:layout_constraintTop_toBottomOf="@id/recycler_view_service_intervals"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintWidth_percent="0.9" />

@@ -32,7 +32,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
     private TextView partNameTextView, usedBikeTextView, partTotalDistanceTextView;
     private ImageButton addServiceButton, addRideButton;
-    private RecyclerView recyclerViewServices, recyclerViewRides;
+    private RecyclerView recyclerViewServiceIntervals, recyclerViewRides;
     private RideAdapter adapterRides;
     private List<DashboardActivity.Ride> rideList;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -52,7 +52,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         partNameTextView = findViewById(R.id.part_name_text_view);
         usedBikeTextView = findViewById(R.id.used_bike_forcurrentpart_text_view);
         partTotalDistanceTextView = findViewById(R.id.part_totaldistance_text_view);
-        recyclerViewServices = findViewById(R.id.recycler_view_services);
+        recyclerViewServiceIntervals = findViewById(R.id.recycler_view_service_intervals);
         recyclerViewRides = findViewById(R.id.recycler_view_rides);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         addServiceButton = findViewById(R.id.add_service_button);

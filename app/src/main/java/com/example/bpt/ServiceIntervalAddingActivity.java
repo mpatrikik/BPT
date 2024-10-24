@@ -87,7 +87,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
 
         submitButton.setOnClickListener(v -> { saveServiceInterval(); });
 
-        checkAndCreateServicesNode();
+        checkAndCreateMAINSERVICESNode();
     }
 
     private final TextWatcher inputWatcher = new TextWatcher() {
@@ -113,17 +113,17 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
         }
     }
 
-    private void checkAndCreateServicesNode() {
+    private void checkAndCreateMAINSERVICESNode() {
         mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
         .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                        DatabaseReference servicesRef = partSnapshot.child("services").getRef();
-                        if (!partSnapshot.hasChild("services")) {
+                        DatabaseReference servicesRef = partSnapshot.child("MAINSERVICES").getRef();
+                        if (!partSnapshot.hasChild("MAINSERVICES")) {
                             servicesRef.setValue("");
-                            Toast.makeText(ServiceIntervalAddingActivity.this, "Services node created", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ServiceIntervalAddingActivity.this, "SERVICES node created", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } else {
@@ -153,12 +153,12 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                                DatabaseReference servicesRef = partSnapshot.child("services").getRef();
+                                DatabaseReference servicesRef = partSnapshot.child("MAINSERVICES").getRef();
 
                                 // Új szerviz node létrehozása
                                 DatabaseReference newServiceRef = servicesRef.push();
-                                newServiceRef.child("serviceName").setValue(serviceName);
-                                newServiceRef.child("serviceValueKm").setValue(value);
+                                newServiceRef.child("serviceIntervalName").setValue(serviceName);
+                                newServiceRef.child("serviceIntervalValueKm").setValue(value);
 
                                 // Repeat vagy maxLife beállítása a kapcsoló alapján
                                 if (isRepeat) {
