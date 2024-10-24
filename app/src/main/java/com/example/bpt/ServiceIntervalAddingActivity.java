@@ -155,7 +155,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
                                 DatabaseReference servicesRef = partSnapshot.child("MAINSERVICES").getRef();
 
-                                // Új szerviz node létrehozása
+                                // Új szerviz intervallum létrehozása
                                 DatabaseReference newServiceRef = servicesRef.push();
                                 newServiceRef.child("serviceIntervalName").setValue(serviceName);
                                 newServiceRef.child("serviceIntervalValueKm").setValue(value);
