@@ -1,0 +1,11 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/add_service"
+        android:title="Add service" />
+    <item
+        android:id="@+id/edit_service_interval"
+        android:title="Edit" />
+    <item
+        android:id="@+id/delete_service_interval"
+        android:title="Delete" />
+</menu>
