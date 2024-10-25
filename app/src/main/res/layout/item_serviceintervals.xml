@@ -6,7 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:cardCornerRadius="17dp"
     app:cardElevation="0dp"
-    android:layout_margin="7dp"
+    android:layout_margin="6dp"
     app:cardBackgroundColor="#33FF4B00"
     tools:ignore="HardcodedText">
 
@@ -30,7 +30,7 @@
             android:id="@+id/service_interval_valuekm_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Service interval value km left"
+            android:text="000km of 000km left"
             android:textSize="16sp"
             android:fontFamily="@font/averagesans_regular"
             android:layout_marginStart="10dp" />
@@ -39,7 +39,7 @@
             android:id="@+id/last_service_interval_date_textview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Repeat: Yes/No"
+            android:text="Last serviced on 0000.00.00., at 00:00 after 000km"
             android:textSize="16sp"
             android:fontFamily="@font/averagesans_regular"
             android:layout_marginStart="10dp" />

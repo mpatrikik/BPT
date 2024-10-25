@@ -71,6 +71,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         partName = getIntent().getStringExtra("part_name");
         if (partName != null) {
             partNameTextView.setText(partName);
+            loadServiceIntervalsForPart(partName);
         } else {
             Toast.makeText(this, "Error: No part name provided", Toast.LENGTH_SHORT).show();
             finish();
@@ -86,6 +87,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
         loadBikesForPart(partName);
         calculateTotalDistanceForPart(partName);
+        loadServiceIntervalsForPart(partName);
         loadRidesForPart(partName);
 
         ImageButton homeButton = findViewById(R.id.home_button);
@@ -121,7 +123,6 @@ public class PartDetailsActivity extends AppCompatActivity {
     }
 
     private void loadBikesForPart(String partName) {
-        String userId = mAuth.getCurrentUser().getUid();
         mDatabase.child("users").child(userId).child("parts")
                 .orderByChild("partName").equalTo(partName)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -167,6 +168,51 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
+    private void deletePart(String partName) {
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        for (DataSnapshot bikeSnapshot : dataSnapshot.getChildren()) {
+                            bikeSnapshot.getRef().removeValue();
+                        }
+                        Toast.makeText(PartDetailsActivity.this, "Part deleted", Toast.LENGTH_SHORT).show();
+                        finish(); // Close activity after deletion
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to delete bike: ", databaseError.toException());
+                    }
+                });
+    }
+
+    private void loadServiceIntervalsForPart(String partName) {
+        mDatabase.child("users").child(userId).child("parts")
+                .orderByChild("partName").equalTo(partName)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        List<DataSnapshot> serviceIntervalsList = new ArrayList<>();
+                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                            DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                            for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                serviceIntervalsList.add(serviceIntervalSnapshot);
+                            }
+                        }
+
+                        // Set up the RecyclerView with the adapter
+                        recyclerViewServiceIntervals.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                        ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList);
+                        recyclerViewServiceIntervals.setAdapter(adapter);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to load service intervals: ", databaseError.toException());
+                    }
+                });
+    }
+
     private void loadRidesForPart(String partName) {
         mDatabase.child("users").child(userId).child("rides")
                 .addValueEventListener(new ValueEventListener() {
@@ -196,25 +242,6 @@ public class PartDetailsActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         Log.e("PartDetailsActivity", "Failed to load rides: ", databaseError.toException());
-                    }
-                });
-    }
-
-    private void deletePart(String partName) {
-        String userId = mAuth.getCurrentUser().getUid();
-        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        for (DataSnapshot bikeSnapshot : dataSnapshot.getChildren()) {
-                            bikeSnapshot.getRef().removeValue();
-                        }
-                        Toast.makeText(PartDetailsActivity.this, "Part deleted", Toast.LENGTH_SHORT).show();
-                        finish(); // Close activity after deletion
-                    }
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("PartDetailsActivity", "Failed to delete bike: ", databaseError.toException());
                     }
                 });
     }
