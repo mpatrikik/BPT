@@ -141,12 +141,10 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
         String serviceName = serviceIntervalNameEditText.getText().toString().trim();
         String value = valueEditText.getText().toString().trim();
         boolean isRepeat = repeateSwitch.isChecked();
-
         if (serviceName.isEmpty() || value.isEmpty()) {
             Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
             return;
         }
-
         mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -156,20 +154,20 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                                 DatabaseReference servicesRef = partSnapshot.child("MAINSERVICES").getRef();
 
                                 // Új szerviz intervallum létrehozása
-                                DatabaseReference newServiceRef = servicesRef.push();
-                                newServiceRef.child("serviceIntervalName").setValue(serviceName);
-                                newServiceRef.child("serviceIntervalValueKm").setValue(value);
+                                DatabaseReference newServiceIntervalRef = servicesRef.push();
 
-                                // Repeat vagy maxLife beállítása a kapcsoló alapján
-                                if (isRepeat) {
-                                    newServiceRef.child("serviceInterval").child("isRepeat").setValue(true);
-                                    newServiceRef.child("serviceInterval").child("maxLife").setValue(false);
-                                } else {
-                                    newServiceRef.child("serviceInterval").child("isRepeat").setValue(false);
-                                    newServiceRef.child("serviceInterval").child("maxLife").setValue(value);
-                                }
+                                DatabaseReference serviceIntervalRef = newServiceIntervalRef.child("serviceInterval");
+                                serviceIntervalRef.child("isRepeat").setValue(isRepeat);
+                                serviceIntervalRef.child("maxLife").setValue(isRepeat ? false : value);
+                                serviceIntervalRef.child("serviceIntervalName").setValue(serviceName);
+                                serviceIntervalRef.child("serviceIntervalValueKm").setValue(value);
 
-                                Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved", Toast.LENGTH_SHORT).show();
+                                DatabaseReference servicesNode = newServiceIntervalRef.child("SERVICES").push();
+                                servicesNode.child("serviceName").setValue("");
+                                servicesNode.child("serviceDate").setValue("");
+                                servicesNode.child("serviceTime").setValue("");
+
+                                Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved with services node", Toast.LENGTH_SHORT).show();
 
                                 // Visszalépünk a PartDetailsActivity-be
                                 Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
