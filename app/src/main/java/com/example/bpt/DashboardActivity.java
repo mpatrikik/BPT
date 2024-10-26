@@ -36,8 +36,7 @@ public class DashboardActivity extends AppCompatActivity {
     private RideAdapter adapterRides;
     private BikeAdapter adapterBikes;
     private PartAdapter adapterParts;
-    private List<String> bikeList;
-    private List<String> distanceList;
+    private List<String> bikeList, distanceList;
     private List<Ride> rideList;
     private List<Part> partList;
     private SwipeRefreshLayout swipeRefreshLayout;

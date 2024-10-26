@@ -31,8 +31,8 @@ import java.util.Locale;
 public class PartDetailsActivity extends AppCompatActivity {
 
     private TextView partNameTextView, usedBikeTextView, partTotalDistanceTextView;
-    private ImageButton addServiceButton, addRideButton;
-    private RecyclerView recyclerViewServiceIntervals, recyclerViewRides;
+    private ImageButton addServiceIntervalsButton, addServiceButton, addRideButton;
+    private RecyclerView recyclerViewServiceIntervals , recyclerViewServices, recyclerViewRides;
     private RideAdapter adapterRides;
     private List<DashboardActivity.Ride> rideList;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -53,8 +53,10 @@ public class PartDetailsActivity extends AppCompatActivity {
         usedBikeTextView = findViewById(R.id.used_bike_forcurrentpart_text_view);
         partTotalDistanceTextView = findViewById(R.id.part_totaldistance_text_view);
         recyclerViewServiceIntervals = findViewById(R.id.recycler_view_service_intervals);
+        recyclerViewServices = findViewById(R.id.recycler_view_services);
         recyclerViewRides = findViewById(R.id.recycler_view_rides);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        addServiceIntervalsButton = findViewById(R.id.add_service_intervals_button);
         addServiceButton = findViewById(R.id.add_service_button);
         addRideButton = findViewById(R.id.add_ride_button);
 
@@ -77,9 +79,16 @@ public class PartDetailsActivity extends AppCompatActivity {
             finish();
         }
 
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadServiceIntervalsForPart(partName);
+            loadRidesForPart(partName);
+            loadBikesForPart(partName);
+            calculateTotalDistanceForPart(partName);
+            swipeRefreshLayout.setRefreshing(false);
+                });
+
         partNameTextView.setText(partName);
 
-        //recyclerViewServices.setLayoutManager(new LinearLayoutManager(this));
         recyclerViewRides.setLayoutManager(new LinearLayoutManager(this));
         rideList = new ArrayList<>();
         adapterRides = new RideAdapter(rideList);
@@ -113,8 +122,8 @@ public class PartDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        addServiceButton = findViewById(R.id.add_service_button);
-        addServiceButton.setOnClickListener(v -> {
+        addServiceIntervalsButton = findViewById(R.id.add_service_button);
+        addServiceIntervalsButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ServiceIntervalAddingActivity.class);
             intent.putExtra("selected_part_name", partName);
             startActivity(intent);

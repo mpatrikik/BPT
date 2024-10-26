@@ -154,12 +154,12 @@
                         android:textSize="30sp"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toStartOf="@id/add_service_interval_button"
+                        app:layout_constraintEnd_toStartOf="@id/add_service_intervals_button"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
 
                     <ImageButton
-                        android:id="@+id/add_service_interval_button"
+                        android:id="@+id/add_service_intervals_button"
                         android:layout_width="45dp"
                         android:layout_height="45dp"
                         android:layout_marginStart="15dp"
