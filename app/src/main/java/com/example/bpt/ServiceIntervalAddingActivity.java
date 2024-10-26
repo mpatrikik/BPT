@@ -157,10 +157,10 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                                 DatabaseReference newServiceIntervalRef = servicesRef.push();
 
                                 DatabaseReference serviceIntervalRef = newServiceIntervalRef.child("serviceInterval");
-                                serviceIntervalRef.child("isRepeat").setValue(isRepeat);
-                                serviceIntervalRef.child("maxLife").setValue(isRepeat ? false : value);
                                 serviceIntervalRef.child("serviceIntervalName").setValue(serviceName);
                                 serviceIntervalRef.child("serviceIntervalValueKm").setValue(value);
+                                serviceIntervalRef.child("maxLife").setValue(isRepeat ? false : value);
+                                serviceIntervalRef.child("isRepeat").setValue(isRepeat);
 
                                 DatabaseReference servicesNode = newServiceIntervalRef.child("SERVICES").push();
                                 servicesNode.child("serviceName").setValue("");
