@@ -177,7 +177,7 @@ public class PartDetailsActivity extends AppCompatActivity {
                             bikeSnapshot.getRef().removeValue();
                         }
                         Toast.makeText(PartDetailsActivity.this, "Part deleted", Toast.LENGTH_SHORT).show();
-                        finish(); // Close activity after deletion
+                        finish();
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
@@ -192,18 +192,21 @@ public class PartDetailsActivity extends AppCompatActivity {
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        List<DataSnapshot> serviceIntervalsList = new ArrayList<>();
-                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                            DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
-                            for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
-                                serviceIntervalsList.add(serviceIntervalSnapshot);
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                String partId = partSnapshot.getKey();
+                                List<DataSnapshot> serviceIntervalsList = new ArrayList<>();
+                                DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                                for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                    serviceIntervalsList.add(serviceIntervalSnapshot);
+                                }
+
+                                // Az adapter létrehozása a partId átadásával
+                                recyclerViewServiceIntervals.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                                ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList, partId);
+                                recyclerViewServiceIntervals.setAdapter(adapter);
                             }
                         }
-
-                        // Set up the RecyclerView with the adapter
-                        recyclerViewServiceIntervals.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
-                        ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList);
-                        recyclerViewServiceIntervals.setAdapter(adapter);
                     }
 
                     @Override

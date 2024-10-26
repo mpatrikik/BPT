@@ -1,6 +1,7 @@
 package com.example.bpt;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,9 +11,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.List;
 
@@ -20,10 +26,18 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
 
     private Context context;
     private List<DataSnapshot> serviceIntervalsList;
+    private String partId;
+    private String userId;
 
-    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList) {
+
+    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId) {
         this.context = context;
         this.serviceIntervalsList = serviceIntervalsList;
+        this.partId = partId;
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser != null) {
+            this.userId = currentUser.getUid();
+        }
     }
 
     @NonNull
@@ -36,7 +50,6 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DataSnapshot serviceIntervalSnapshot = serviceIntervalsList.get(position);
-
         String serviceIntervalName = serviceIntervalSnapshot.child("serviceInterval").child("serviceIntervalName").getValue(String.class);
         boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
         String remainingDistance = "000km of 000km left";
@@ -49,14 +62,12 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
 
-            // Válasszuk ki a megfelelő menüt
             if (isRepeat) {
                 popupMenu.getMenuInflater().inflate(R.menu.popup_menu_repeating_serviceintervals, popupMenu.getMenu());
             } else {
                 popupMenu.getMenuInflater().inflate(R.menu.popup_menu_non_repeating_serviceintervals, popupMenu.getMenu());
             }
 
-            // Animált megjelenítés
             popupMenu.setOnMenuItemClickListener(item -> {
                 int itemId = item.getItemId();
                 if (itemId == R.id.add_service) {
@@ -66,7 +77,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     editServiceInterval(serviceIntervalSnapshot.getKey());
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
-                    deleteServiceInterval(serviceIntervalSnapshot.getKey());
+                    showDeleteConfirmationDialog(serviceIntervalSnapshot.getKey(), position);
                     return true;
                 } else {
                     return false;
@@ -101,9 +112,30 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         Toast.makeText(context, "Edit interval: " + intervalId, Toast.LENGTH_SHORT).show();
     }
 
-    private void deleteServiceInterval(String intervalId) {
-        // Implementáld a szolgáltatás intervallum törlését
-        Toast.makeText(context, "Delete interval: " + intervalId, Toast.LENGTH_SHORT).show();
+    private void showDeleteConfirmationDialog(String intervalId, int position) {
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Service Interval")
+                .setMessage("Are you sure you want to delete this service interval?")
+                .setPositiveButton("Yes", (dialog, which) -> deleteServiceInterval(intervalId, position))
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
+    }
+
+    private void deleteServiceInterval(String intervalId, int position) {
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(userId).child("parts").child(partId).child("MAINSERVICES").child(intervalId);
+        databaseReference.removeValue().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                Toast.makeText(context, "Service interval deleted", Toast.LENGTH_SHORT).show();
+                serviceIntervalsList.remove(position);
+                notifyItemRemoved(position);
+                Log.d("ServiceIntervalsAdapter", "Service interval deleted successfully");
+            } else {
+                Toast.makeText(context, "Failed to delete service interval", Toast.LENGTH_SHORT).show();
+                Log.e("ServiceIntervalsAdapter", "Error deleting service interval", task.getException());
+            }
+        });
     }
 
 }
