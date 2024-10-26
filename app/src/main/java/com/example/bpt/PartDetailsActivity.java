@@ -115,6 +115,13 @@ public class PartDetailsActivity extends AppCompatActivity {
                     .show();
         });
 
+        addServiceButton = findViewById(R.id.add_service_button);
+        addServiceButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ServiceAddingActivity.class);
+            intent.putExtra("selected_part_name", partName);
+            startActivity(intent);
+        });
+
         addRideButton = findViewById(R.id.add_ride_button);
         addRideButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
