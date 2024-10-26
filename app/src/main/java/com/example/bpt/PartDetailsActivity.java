@@ -122,7 +122,7 @@ public class PartDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        addServiceIntervalsButton = findViewById(R.id.add_service_button);
+        addServiceIntervalsButton = findViewById(R.id.add_service_intervals_button);
         addServiceIntervalsButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ServiceIntervalAddingActivity.class);
             intent.putExtra("selected_part_name", partName);
