@@ -133,10 +133,8 @@ public class ServiceAddingActivity extends AppCompatActivity {
         String time = timePickerText.getText().toString().trim();
 
         boolean allFieldsFilled = !serviceName.isEmpty() && !date.equals("Today") && !time.equals("Now");
-
         submitServiceButton.setEnabled(allFieldsFilled);
         submitServiceButton.setAlpha(allFieldsFilled ? 1.0f : 0.5f);
-
         return allFieldsFilled;
     }
 
@@ -164,6 +162,18 @@ public class ServiceAddingActivity extends AppCompatActivity {
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
                 (view, selectedHour, selectedMinute) -> {
                     selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
+
+                    if (datePickerText.getText().toString().equals(
+                            new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(calendar.getTime()))) {
+                        Calendar selectedTimeCal = Calendar.getInstance();
+                        selectedTimeCal.set(Calendar.HOUR_OF_DAY, selectedHour);
+                        selectedTimeCal.set(Calendar.MINUTE, selectedMinute);
+                        if (selectedTimeCal.after(calendar)) {
+                            Toast.makeText(this, "Select a valid past or current time", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                    }
+
                     timePickerText.setText(selectedTime);
                     checkInputs();
                 }, currentHour, currentMinute, true);
