@@ -162,12 +162,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                                 serviceIntervalRef.child("maxLife").setValue(isRepeat ? false : value);
                                 serviceIntervalRef.child("isRepeat").setValue(isRepeat);
 
-                                DatabaseReference servicesNode = newServiceIntervalRef.child("SERVICES").push();
-                                servicesNode.child("serviceName").setValue("");
-                                servicesNode.child("serviceDate").setValue("");
-                                servicesNode.child("serviceTime").setValue("");
-
-                                Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved with services node", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved.", Toast.LENGTH_SHORT).show();
 
                                 // Visszalépünk a PartDetailsActivity-be
                                 Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
