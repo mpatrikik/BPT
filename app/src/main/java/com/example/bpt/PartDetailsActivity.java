@@ -118,7 +118,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         addServiceButton = findViewById(R.id.add_service_button);
         addServiceButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ServiceAddingActivity.class);
-            intent.putExtra("selected_part_name", partName);
+            intent.putExtra("partName", partName);
             startActivity(intent);
         });
 

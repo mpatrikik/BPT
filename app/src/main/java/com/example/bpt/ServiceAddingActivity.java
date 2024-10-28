@@ -78,7 +78,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
                     Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 Log.e("ServiceAddingActivity", "Error finding partId", databaseError.toException());
@@ -97,12 +96,15 @@ public class ServiceAddingActivity extends AppCompatActivity {
         backButton = findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
+            intent.putExtra("partName", partName);
             startActivity(intent);
         });
 
+        submitServiceButton.setOnClickListener(v -> saveServiceDetails());
+
+
         datePickerText.setOnClickListener(v -> showDatePicker());
         timePickerText.setOnClickListener(v -> showTimePicker());
-        submitServiceButton.setOnClickListener(v -> saveServiceDetails());
 
         serviceNameEditText.addTextChangedListener(inputWatcher);
         datePickerText.addTextChangedListener(inputWatcher);
@@ -126,7 +128,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
     };
 
     // Check if all inputs are filled
-    private void checkInputs() {
+    private boolean checkInputs() {
         String serviceName = serviceNameEditText.getText().toString().trim();
         String date = datePickerText.getText().toString().trim();
         String time = timePickerText.getText().toString().trim();
@@ -135,6 +137,8 @@ public class ServiceAddingActivity extends AppCompatActivity {
 
         submitServiceButton.setEnabled(allFieldsFilled);
         submitServiceButton.setAlpha(allFieldsFilled ? 1.0f : 0.5f);
+
+        return allFieldsFilled;
     }
 
     public void showDatePicker() {
@@ -147,6 +151,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
                 (view1, selectedYear, selectedMonth, selectedDay) -> {
                     String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
                     datePickerText.setText(selectedDate);
+                    checkInputs();
                 }, year, month, day);
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
         datePickerDialog.show();
@@ -157,25 +162,13 @@ public class ServiceAddingActivity extends AppCompatActivity {
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         int currentMinute = calendar.get(Calendar.MINUTE);
 
-        String selectedDate = datePickerText.getText().toString();
-
-        if (selectedDate.equals(new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(calendar.getTime()))) {
-            // Aktuális nap, csak a múltbeli vagy aktuális időpontokat engedjük
-            TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-                    (view1, selectedHour, selectedMinute) -> {
-                        String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
-                        timePickerText.setText(selectedTime);
-                    }, currentHour, currentMinute, true);
-
-            timePickerDialog.show();
-        } else {
-            TimePickerDialog timePickerDialog = new TimePickerDialog(this,
-                    (view12, selectedHour, selectedMinute) -> {
-                        String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
-                        timePickerText.setText(selectedTime);
-                    }, 0, 0, true);
-            timePickerDialog.show();
-        }
+        TimePickerDialog timePickerDialog = new TimePickerDialog(this,
+                (view, selectedHour, selectedMinute) -> {
+                    selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
+                    timePickerText.setText(selectedTime);
+                    checkInputs();
+                }, currentHour, currentMinute, true);
+        timePickerDialog.show();
     }
 
     private void saveServiceDetails() {
