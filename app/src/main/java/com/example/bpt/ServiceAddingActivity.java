@@ -49,6 +49,9 @@ public class ServiceAddingActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
+        serviceIntervalId = getIntent().getStringExtra("serviceIntervalId");
+        partId = getIntent().getStringExtra("partId");
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             userId = currentUser.getUid();

@@ -1,6 +1,9 @@
 package com.example.bpt;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -71,10 +74,13 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             popupMenu.setOnMenuItemClickListener(item -> {
                 int itemId = item.getItemId();
                 if (itemId == R.id.add_service) {
-                    addService(serviceIntervalSnapshot.getKey());
+                    Intent intent = new Intent(context, ServiceAddingActivity.class);
+                    intent.putExtra("partId", partId);
+                    intent.putExtra("serviceIntervalId", serviceIntervalSnapshot.getKey());
+                    context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.edit_service_interval) {
-                    editServiceInterval(serviceIntervalSnapshot.getKey());
+
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
                     showDeleteConfirmationDialog(serviceIntervalSnapshot.getKey(), position);
