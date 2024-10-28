@@ -169,7 +169,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
                         selectedTimeCal.set(Calendar.HOUR_OF_DAY, selectedHour);
                         selectedTimeCal.set(Calendar.MINUTE, selectedMinute);
                         if (selectedTimeCal.after(calendar)) {
-                            Toast.makeText(this, "Select a valid past or current time", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(this, "Select current or past time", Toast.LENGTH_SHORT).show();
                             return;
                         }
                     }
