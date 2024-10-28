@@ -181,6 +181,8 @@ public class ManualRideAddingActivity extends AppCompatActivity {
         });
     }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     private void loadPartsForBicycle(String selectedBicycle) {
         if (userId == null || selectedBicycle == null) {
             Toast.makeText(this, "Felhasználó ID vagy kerékpár hiányzik. Nem lehet betölteni az alkatrészeket.", Toast.LENGTH_SHORT).show();

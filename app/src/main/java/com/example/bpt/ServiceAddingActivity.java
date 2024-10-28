@@ -38,7 +38,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
     private String userId, partName, partId, serviceIntervalId;
-
     private String selectedDate = "";
     private String selectedTime = "";
 
@@ -100,7 +99,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        submitServiceButton.setOnClickListener(v -> saveServiceDetails());
+        submitServiceButton.setOnClickListener(v -> saveService());
 
 
         datePickerText.setOnClickListener(v -> showDatePicker());
@@ -171,16 +170,18 @@ public class ServiceAddingActivity extends AppCompatActivity {
         timePickerDialog.show();
     }
 
-    private void saveServiceDetails() {
+    private void saveService() {
         String serviceName = serviceNameEditText.getText().toString().trim();
+        String dateToSave = datePickerText.getText().toString().trim();
+        String timeToSave = timePickerText.getText().toString().trim();
 
         DatabaseReference serviceRef = mDatabase.child("users").child(userId)
                 .child("parts").child(partId).child("MAINSERVICES").child(serviceIntervalId)
                 .child("SERVICES").push();
 
         serviceRef.child("serviceName").setValue(serviceName);
-        serviceRef.child("serviceDate").setValue(selectedDate);
-        serviceRef.child("serviceTime").setValue(selectedTime).addOnCompleteListener(task -> {
+        serviceRef.child("serviceDate").setValue(dateToSave);
+        serviceRef.child("serviceTime").setValue(timeToSave).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 Toast.makeText(ServiceAddingActivity.this, "Service added successfully", Toast.LENGTH_SHORT).show();
                 finish();
