@@ -85,7 +85,7 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        submitButton.setOnClickListener(v -> { saveServiceInterval(); });
+        submitButton.setOnClickListener(v -> { checkAndSaveServiceInterval(); });
 
         checkAndCreateMAINSERVICESNode();
     }
@@ -137,6 +137,46 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
         });
     }
 
+    private void checkAndSaveServiceInterval() {
+        boolean isRepeat = repeateSwitch.isChecked();
+
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            boolean hasRepeatingInterval = false;
+                            boolean hasNonRepeatingInterval = false;
+
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                                for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                    Boolean intervalIsRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
+                                    if (Boolean.TRUE.equals(intervalIsRepeat)) {
+                                        hasRepeatingInterval = true;
+                                    } else {
+                                        hasNonRepeatingInterval = true;
+                                    }
+                                }
+                                if ((hasRepeatingInterval && isRepeat) || (hasNonRepeatingInterval && !isRepeat)) {
+                                    Toast.makeText(ServiceIntervalAddingActivity.this,
+                                            "You can only add one " + (isRepeat ? "repeating" : "non-repeating") + " service interval per part.",
+                                            Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
+                            }
+                            saveServiceInterval();
+                        } else {
+                            Toast.makeText(ServiceIntervalAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("ServiceAddingActivity", "Error checking service intervals", databaseError.toException());
+                    }
+                });
+    }
+
     private void saveServiceInterval() {
         String serviceName = serviceIntervalNameEditText.getText().toString().trim();
         String value = valueEditText.getText().toString().trim();
@@ -152,8 +192,6 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
                                 DatabaseReference servicesRef = partSnapshot.child("MAINSERVICES").getRef();
-
-                                // Új szerviz intervallum létrehozása
                                 DatabaseReference newServiceIntervalRef = servicesRef.push();
 
                                 DatabaseReference serviceIntervalRef = newServiceIntervalRef.child("serviceInterval");
@@ -164,7 +202,6 @@ public class ServiceIntervalAddingActivity extends AppCompatActivity {
 
                                 Toast.makeText(ServiceIntervalAddingActivity.this, "Service interval saved.", Toast.LENGTH_SHORT).show();
 
-                                // Visszalépünk a PartDetailsActivity-be
                                 Intent intent = new Intent(ServiceIntervalAddingActivity.this, PartDetailsActivity.class);
                                 intent.putExtra("part_name", partName);
                                 startActivity(intent);

@@ -154,13 +154,49 @@ public class PartDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        addServiceIntervalsButton = findViewById(R.id.add_service_intervals_button);
-        addServiceIntervalsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ServiceIntervalAddingActivity.class);
-            intent.putExtra("selected_part_name", partName);
-            startActivity(intent);
-        });
+        addServiceIntervalsButton.setOnClickListener(v -> { checkServiceIntervalsBeforeAdding(); });
 
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    }
+
+    private void checkServiceIntervalsBeforeAdding() {
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        boolean hasRepeatingInterval = false;
+                        boolean hasNonRepeatingInterval = false;
+
+                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                            DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                            for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
+                                if (Boolean.TRUE.equals(isRepeat)) {
+                                    hasRepeatingInterval = true;
+                                } else if (Boolean.FALSE.equals(isRepeat)) {
+                                    hasNonRepeatingInterval = true;
+                                }
+                            }
+
+                            // Ha mindkét típusú intervallum létezik, megakadályozzuk az új hozzáadását
+                            if (hasRepeatingInterval && hasNonRepeatingInterval) {
+                                Toast.makeText(PartDetailsActivity.this, "You can only add one repeating and one non-repeating service interval per part.", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            // Ha csak egy adott típusú intervallum létezik, engedjük a másik hozzáadását
+                            Intent intent = new Intent(PartDetailsActivity.this, ServiceIntervalAddingActivity.class);
+                            intent.putExtra("selected_part_name", partName);
+                            startActivity(intent);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Error checking service intervals", databaseError.toException());
+                    }
+                });
     }
 
     private void loadBikesForPart(String partName) {

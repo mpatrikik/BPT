@@ -96,11 +96,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
         submitServiceButton.setAlpha(0.5f);
 
         backButton = findViewById(R.id.back_button);
-        backButton.setOnClickListener(v -> {
-            Intent intent = new Intent(ServiceAddingActivity.this, PartDetailsActivity.class);
-            intent.putExtra("partName", partName);
-            startActivity(intent);
-        });
+        backButton.setOnClickListener(v -> finish());
 
         submitServiceButton.setOnClickListener(v -> saveService());
 
