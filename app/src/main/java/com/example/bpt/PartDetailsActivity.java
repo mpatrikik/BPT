@@ -115,11 +115,36 @@ public class PartDetailsActivity extends AppCompatActivity {
                     .show();
         });
 
-        addServiceButton = findViewById(R.id.add_service_button);
         addServiceButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ServiceAddingActivity.class);
-            intent.putExtra("partName", partName);
-            startActivity(intent);
+            mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                            boolean hasRepeatingServiceInterval = false;
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                                for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                    Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
+                                    if (Boolean.TRUE.equals(isRepeat)) {
+                                        hasRepeatingServiceInterval = true;
+                                        break;
+                                    }
+                                }
+                                if (hasRepeatingServiceInterval) break;
+                            }
+                            if (hasRepeatingServiceInterval) {
+                                Intent intent = new Intent(PartDetailsActivity.this, ServiceAddingActivity.class);
+                                intent.putExtra("partName", partName);
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(PartDetailsActivity.this, "No repeating service interval available.", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        @Override
+                        public void onCancelled(@NonNull DatabaseError databaseError) {
+                            Log.e("PartDetailsActivity", "Error checking repeating service intervals", databaseError.toException());
+                        }
+                    });
         });
 
         addRideButton = findViewById(R.id.add_ride_button);
