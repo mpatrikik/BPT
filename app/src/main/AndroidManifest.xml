@@ -43,6 +43,8 @@
         <activity android:name=".ServiceIntervalAddingActivity"> </activity>
 
         <activity android:name=".ServiceAddingActivity"> </activity>
+
+        <activity android:name=".EditServiceIntervalActivity"> </activity>
     </application>
 
 </manifest>

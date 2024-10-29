@@ -27,8 +27,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
 
     private Context context;
     private List<DataSnapshot> serviceIntervalsList;
-    private String partId;
-    private String userId;
+    private String partId, userId;
 
 
     public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId) {
@@ -78,7 +77,10 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.edit_service_interval) {
-
+                    Intent intent = new Intent(context, EditServiceIntervalActivity.class);
+                    intent.putExtra("partId", partId);
+                    intent.putExtra("serviceIntervalId", serviceIntervalSnapshot.getKey());
+                    context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
                     showDeleteConfirmationDialog(serviceIntervalSnapshot.getKey(), position);

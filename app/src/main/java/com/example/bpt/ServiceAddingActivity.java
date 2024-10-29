@@ -76,8 +76,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
                             serviceIntervalId = serviceIntervalSnapshot.getKey();
                         }
                     }
-                } else {
-                    Toast.makeText(ServiceAddingActivity.this, "Part not found", Toast.LENGTH_SHORT).show();
                 }
             }
             @Override
