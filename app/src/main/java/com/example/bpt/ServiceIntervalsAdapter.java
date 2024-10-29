@@ -80,6 +80,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     Intent intent = new Intent(context, EditServiceIntervalActivity.class);
                     intent.putExtra("partId", partId);
                     intent.putExtra("serviceIntervalId", serviceIntervalSnapshot.getKey());
+                    intent.putExtra("serviceIntervalName", serviceIntervalName);
                     context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
@@ -107,15 +108,6 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             lastServiceDateTextView = itemView.findViewById(R.id.last_service_interval_date_textview);
             moreButton = itemView.findViewById(R.id.more_button);
         }
-    }
-    private void addService(String intervalId) {
-        // Implementáld a szolgáltatás hozzáadásának logikáját
-        Toast.makeText(context, "Add service to interval: " + intervalId, Toast.LENGTH_SHORT).show();
-    }
-
-    private void editServiceInterval(String intervalId) {
-        // Implementáld a szolgáltatás intervallum szerkesztését
-        Toast.makeText(context, "Edit interval: " + intervalId, Toast.LENGTH_SHORT).show();
     }
 
     private void showDeleteConfirmationDialog(String intervalId, int position) {
