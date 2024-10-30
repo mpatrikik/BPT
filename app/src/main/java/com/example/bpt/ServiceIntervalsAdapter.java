@@ -59,6 +59,11 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         holder.remainingDistanceTextView.setText(remainingDistance);
         holder.lastServiceDateTextView.setText(lastServiceDate);
 
+        String serviceIntervalId = serviceIntervalSnapshot.getKey();
+        DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                .child("users").child(userId).child("parts").child(partId)
+                .child("MAINSERVICES").child(serviceIntervalId).child("serviceInterval");
+
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
 
@@ -77,11 +82,20 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.edit_service_interval) {
-                    Intent intent = new Intent(context, EditServiceIntervalActivity.class);
-                    intent.putExtra("partId", partId);
-                    intent.putExtra("serviceIntervalId", serviceIntervalSnapshot.getKey());
-                    intent.putExtra("serviceIntervalName", serviceIntervalName);
-                    context.startActivity(intent);
+                    databaseReference.child("serviceIntervalValueKm").get().addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            String serviceIntervalValueKm = task.getResult().getValue(String.class);
+                            Intent intent = new Intent(context, EditServiceIntervalActivity.class);
+                            intent.putExtra("userId", userId);
+                            intent.putExtra("partId", partId);
+                            intent.putExtra("serviceIntervalId", serviceIntervalId);
+                            intent.putExtra("serviceIntervalName", serviceIntervalName);
+                            intent.putExtra("serviceIntervalValueKm", serviceIntervalValueKm); // Átadjuk a lekérdezett értéket
+                            context.startActivity(intent);
+                        } else {
+                            Toast.makeText(context, "Nem sikerült lekérni az adatokat.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
                     showDeleteConfirmationDialog(serviceIntervalSnapshot.getKey(), position);

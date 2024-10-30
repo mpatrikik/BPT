@@ -12,12 +12,14 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class EditServiceIntervalActivity extends AppCompatActivity {
 
     private EditText serviceIntervalNameEditText, valueEditText;
-    private Switch repeatSwitch;
-    private ImageButton backButton, submitServiceIntervalButton;
-    private String partId, serviceIntervalId, serviceIntervalName;
+    private ImageButton backButton, submitButton;
+    private String userId, partId, serviceIntervalId, serviceIntervalName, serviceIntervalValueKm;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -26,9 +28,8 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
 
         serviceIntervalNameEditText = findViewById(R.id.serviceinterval_name_edit_text);
         valueEditText = findViewById(R.id.value_edit_text);
-        repeatSwitch = findViewById(R.id.repeat_switch);
         backButton = findViewById(R.id.back_button);
-        submitServiceIntervalButton = findViewById(R.id.submit_service_interval_button);
+        submitButton = findViewById(R.id.submit_edit_service_interval_button);
 
         backButton.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
@@ -39,19 +40,43 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
         });
 
         Intent intent = getIntent();
+        userId = intent.getStringExtra("userId");
         partId = intent.getStringExtra("partId");
         serviceIntervalId = intent.getStringExtra("serviceIntervalId");
         serviceIntervalName = intent.getStringExtra("serviceIntervalName");
-
-
+        serviceIntervalValueKm = intent.getStringExtra("serviceIntervalValueKm");
 
         if (serviceIntervalName != null) {
             serviceIntervalNameEditText.setText(serviceIntervalName);
         }
-
+        if (serviceIntervalValueKm != null) {
+            valueEditText.setText(serviceIntervalValueKm);
+        }
+        submitButton.setOnClickListener(v -> saveChanges());
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    private void saveChanges() {
+        String newServiceIntervalName = serviceIntervalNameEditText.getText().toString().trim();
+        String newServiceIntervalValueKm = valueEditText.getText().toString().trim();
+        boolean isNameChanged = !newServiceIntervalName.equals(serviceIntervalName);
+        boolean isValueChanged = !newServiceIntervalValueKm.equals(serviceIntervalValueKm);
+        if (isNameChanged || isValueChanged) {
+            DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference()
+                    .child("users").child(userId).child("parts").child(partId)
+                    .child("MAINSERVICES").child(serviceIntervalId).child("serviceInterval");
+            if (isNameChanged) {
+                databaseReference.child("serviceIntervalName").setValue(newServiceIntervalName);
+            }
+            if (isValueChanged) {
+                databaseReference.child("serviceIntervalValueKm").setValue(newServiceIntervalValueKm);
+            }
+            Toast.makeText(this, "A változások sikeresen mentve!", Toast.LENGTH_SHORT).show();
+            finish();
+        } else {
+            Toast.makeText(this, "Nincs változás a mentéshez.", Toast.LENGTH_SHORT).show();
+        }
+    }
 
 }
