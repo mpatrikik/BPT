@@ -84,7 +84,6 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
         String newServiceIntervalValueKm = valueEditText.getText().toString().trim();
         boolean isNameChanged = !newServiceIntervalName.equals(serviceIntervalName);
         boolean isValueChanged = !newServiceIntervalValueKm.equals(serviceIntervalValueKm);
-
         submitButton.setEnabled(isNameChanged || isValueChanged);
         submitButton.setAlpha(isNameChanged || isValueChanged ? 1f : 0.5f);
     }
