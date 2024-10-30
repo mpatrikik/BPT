@@ -2,6 +2,8 @@ package com.example.bpt;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -31,6 +33,9 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
         backButton = findViewById(R.id.back_button);
         submitButton = findViewById(R.id.submit_edit_service_interval_button);
 
+        submitButton.setEnabled(false);
+        submitButton.setAlpha(0.5f);
+
         backButton.setOnClickListener(v -> {
             new AlertDialog.Builder(this)
                     .setTitle("Discard Changes")
@@ -52,10 +57,38 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
         if (serviceIntervalValueKm != null) {
             valueEditText.setText(serviceIntervalValueKm);
         }
+
+        serviceIntervalNameEditText.addTextChangedListener(textWatcher);
+        valueEditText.addTextChangedListener(textWatcher);
+
         submitButton.setOnClickListener(v -> saveChanges());
     }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private final TextWatcher textWatcher = new TextWatcher() {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) { }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            checkForChanges();
+        }
+    };
+
+    private void checkForChanges() {
+        String newServiceIntervalName = serviceIntervalNameEditText.getText().toString().trim();
+        String newServiceIntervalValueKm = valueEditText.getText().toString().trim();
+        boolean isNameChanged = !newServiceIntervalName.equals(serviceIntervalName);
+        boolean isValueChanged = !newServiceIntervalValueKm.equals(serviceIntervalValueKm);
+
+        submitButton.setEnabled(isNameChanged || isValueChanged);
+        submitButton.setAlpha(isNameChanged || isValueChanged ? 1f : 0.5f);
+    }
+
 
     private void saveChanges() {
         String newServiceIntervalName = serviceIntervalNameEditText.getText().toString().trim();
