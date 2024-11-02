@@ -63,7 +63,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
 
                 // A PartDetailsActivity-ből kérjük az összesített távolságot
                 ((PartDetailsActivity) context).calculateTotalDistanceForPart(partId, totalDistance -> {
-                    int remainingDistance = serviceIntervalValueKm - (int) totalDistance;
+                    int remainingDistance = (int) (serviceIntervalValueKm - totalDistance);
                     if (remainingDistance < 0) remainingDistance = 0;
                     holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
                 });

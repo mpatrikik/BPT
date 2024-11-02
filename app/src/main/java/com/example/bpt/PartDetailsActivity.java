@@ -326,36 +326,70 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
-    public void calculateTotalDistanceForPart(String partName, OnDistanceCalculatedListener listener) {
-        mDatabase.child("users").child(userId).child("rides")
+    public void calculateTotalDistanceForPart(String partId, DistanceCallback callback) {
+        // Először lekérdezzük a partName-t a partId alapján
+        mDatabase.child("users").child(userId).child("parts").child(partId).child("partName")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        double totalDistance = 0;
-                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
-                            List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
-                            if (partsUsed != null && partsUsed.contains(partName)) {
-                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
-                                if (distanceStr != null) {
-                                    totalDistance += Double.parseDouble(distanceStr);
-                                }
-                            }
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String partName = snapshot.getValue(String.class);
+                        if (partName == null) {
+                            Log.e("calculateTotalDistance", "Part name not found for partId: " + partId);
+                            callback.onDistanceCalculated(0);
+                            return;
                         }
-                        listener.onDistanceCalculated(totalDistance);
+
+                        // Ha sikerült lekérni a partName-t, folytatjuk a rides feldolgozásával
+                        mDatabase.child("users").child(userId).child("rides")
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        double totalDistance = 0;
+                                        Log.d("calculateTotalDistance", "Fetching rides for part: " + partName);
+
+                                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                                            List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+                                            Log.d("calculateTotalDistance", "Ride data: " + rideSnapshot.toString());
+                                            Log.d("calculateTotalDistance", "Selected parts in this ride: " + partsUsed);
+
+                                            if (partsUsed != null && partsUsed.contains(partName)) {
+                                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                                Log.d("calculateTotalDistance", "Distance for this ride: " + distanceStr);
+                                                try {
+                                                    totalDistance += Double.parseDouble(distanceStr);
+                                                    Log.d("calculateTotalDistance", "Total distance so far: " + totalDistance);
+                                                } catch (NumberFormatException e) {
+                                                    Log.e("calculateTotalDistance", "Invalid distance format: " + distanceStr);
+                                                }
+                                            } else {
+                                                Log.d("calculateTotalDistance", "Part not found in this ride's selected parts.");
+                                            }
+                                        }
+                                        Log.d("calculateTotalDistance", "Final total distance: " + totalDistance);
+                                        callback.onDistanceCalculated(totalDistance);
+                                    }
+
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                        Log.e("calculateTotalDistance", "Failed to calculate total distance: ", databaseError.toException());
+                                        callback.onDistanceCalculated(0); // Callback 0, ha sikertelen
+                                    }
+                                });
                     }
 
                     @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("PartDetailsActivity", "Failed to calculate total distance: ", databaseError.toException());
-                        listener.onDistanceCalculated(0); // In case of an error, return 0
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("calculateTotalDistance", "Failed to retrieve part name: ", error.toException());
+                        callback.onDistanceCalculated(0);
                     }
                 });
     }
 
-    // Define the interface for callback
-    public interface OnDistanceCalculatedListener {
+
+
+    // Callback interfész definiálása
+    public interface DistanceCallback {
         void onDistanceCalculated(double totalDistance);
     }
-
 
 }
