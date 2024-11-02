@@ -326,4 +326,36 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
+    public void calculateTotalDistanceForPart(String partName, OnDistanceCalculatedListener listener) {
+        mDatabase.child("users").child(userId).child("rides")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        double totalDistance = 0;
+                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                            List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+                            if (partsUsed != null && partsUsed.contains(partName)) {
+                                String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                if (distanceStr != null) {
+                                    totalDistance += Double.parseDouble(distanceStr);
+                                }
+                            }
+                        }
+                        listener.onDistanceCalculated(totalDistance);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to calculate total distance: ", databaseError.toException());
+                        listener.onDistanceCalculated(0); // In case of an error, return 0
+                    }
+                });
+    }
+
+    // Define the interface for callback
+    public interface OnDistanceCalculatedListener {
+        void onDistanceCalculated(double totalDistance);
+    }
+
+
 }
