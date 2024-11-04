@@ -190,11 +190,19 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     }
 
     private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+        Log.d("ServiceIntervalsAdapter", "calculateDistanceSinceLastService called");
+        Log.d("ServiceIntervalsAdapter", "lastServiceDate: " + lastServiceDate + ", lastServiceTime: " + lastServiceTime + ", serviceIntervalValueKm: " + serviceIntervalValueKm);
+
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
+            Log.d("ServiceIntervalsAdapter", "Total distance since last service: " + totalDistanceSinceLastService);
+
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
+            Log.d("ServiceIntervalsAdapter", "Remaining distance: " + remainingDistance);
+
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
         });
     }
+
 
 }

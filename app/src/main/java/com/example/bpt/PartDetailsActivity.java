@@ -366,18 +366,21 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
-
     public void calculateTotalDistanceSinceDateTime(String partId, String lastServiceDate, String lastServiceTime, DistanceCallback callback) {
+        Log.d("PartDetailsActivity", "calculateTotalDistanceSinceDateTime called");
+        Log.d("PartDetailsActivity", "lastServiceDate: " + lastServiceDate + ", lastServiceTime: " + lastServiceTime);
+
         mDatabase.child("users").child(userId).child("parts").child(partId).child("partName")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
                         String partName = snapshot.getValue(String.class);
                         if (partName == null) {
-                            Log.e("calculateTotalDistance", "Part name not found for partId: " + partId);
+                            Log.e("PartDetailsActivity", "Part name not found for partId: " + partId);
                             callback.onDistanceCalculated(0);
                             return;
                         }
+                        Log.d("PartDetailsActivity", "Part name: " + partName);
 
                         mDatabase.child("users").child(userId).child("rides")
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -387,8 +390,8 @@ public class PartDetailsActivity extends AppCompatActivity {
                                         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
 
                                         try {
-                                            // Az utolsó szerviz időpontját beállítjuk összehasonlításra
                                             Date lastServiceDateTime = dateTimeFormat.parse(lastServiceDate + " " + lastServiceTime);
+                                            Log.d("PartDetailsActivity", "Parsed lastServiceDateTime: " + lastServiceDateTime);
 
                                             for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
                                                 String rideDate = rideSnapshot.child("date").getValue(String.class);
@@ -396,28 +399,43 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                                                 if (rideDate != null && rideTime != null) {
                                                     Date rideDateTime = dateTimeFormat.parse(rideDate + " " + rideTime);
+                                                    Log.d("PartDetailsActivity", "Ride dateTime: " + rideDateTime);
+                                                    Log.d("PartDetailsActivity", "Comparing rideDateTime with lastServiceDateTime");
 
-                                                    // Csak azokat a távolságokat adjuk hozzá, amelyek az utolsó szerviz időpontja után vannak
                                                     if (rideDateTime != null && rideDateTime.after(lastServiceDateTime)) {
+                                                        Log.d("PartDetailsActivity", "Ride is after last service date");
+
                                                         List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+                                                        Log.d("PartDetailsActivity", "Parts used in this ride: " + partsUsed);
+
                                                         if (partsUsed != null && partsUsed.contains(partName)) {
                                                             String distanceStr = rideSnapshot.child("distance").getValue(String.class);
-                                                            totalDistance += Double.parseDouble(distanceStr);
+                                                            Log.d("PartDetailsActivity", "Ride distance: " + distanceStr);
+
+                                                            try {
+                                                                double rideDistance = Double.parseDouble(distanceStr);
+                                                                totalDistance += rideDistance;
+                                                                Log.d("PartDetailsActivity", "Updated totalDistance: " + totalDistance);
+                                                            } catch (NumberFormatException e) {
+                                                                Log.e("PartDetailsActivity", "Invalid distance format: " + distanceStr, e);
+                                                            }
                                                         }
+                                                    } else {
+                                                        Log.d("PartDetailsActivity", "Ride dateTime is not after lastServiceDateTime, skipping ride");
                                                     }
                                                 }
                                             }
-
                                         } catch (ParseException e) {
-                                            Log.e("calculateTotalDistance", "Date parsing error", e);
+                                            Log.e("PartDetailsActivity", "Date parsing error", e);
                                         }
 
+                                        Log.d("PartDetailsActivity", "Total distance since last service: " + totalDistance);
                                         callback.onDistanceCalculated(totalDistance);
                                     }
 
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                                        Log.e("calculateTotalDistance", "Failed to calculate total distance: ", databaseError.toException());
+                                        Log.e("PartDetailsActivity", "Failed to calculate total distance: ", databaseError.toException());
                                         callback.onDistanceCalculated(0);
                                     }
                                 });
@@ -425,11 +443,12 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e("calculateTotalDistance", "Failed to retrieve part name: ", error.toException());
+                        Log.e("PartDetailsActivity", "Failed to retrieve part name: ", error.toException());
                         callback.onDistanceCalculated(0);
                     }
                 });
     }
+
 
 
     // Callback interfész definiálása
