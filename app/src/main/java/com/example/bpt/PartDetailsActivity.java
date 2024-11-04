@@ -386,15 +386,18 @@ public class PartDetailsActivity extends AppCompatActivity {
                                         double totalDistance = 0;
                                         SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
 
-                                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
-                                            String rideDate = rideSnapshot.child("date").getValue(String.class);
-                                            String rideTime = rideSnapshot.child("time").getValue(String.class);
+                                        try {
+                                            // Az utolsó szerviz időpontját beállítjuk összehasonlításra
+                                            Date lastServiceDateTime = dateTimeFormat.parse(lastServiceDate + " " + lastServiceTime);
 
-                                            try {
+                                            for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                                                String rideDate = rideSnapshot.child("date").getValue(String.class);
+                                                String rideTime = rideSnapshot.child("time").getValue(String.class);
+
                                                 if (rideDate != null && rideTime != null) {
                                                     Date rideDateTime = dateTimeFormat.parse(rideDate + " " + rideTime);
-                                                    Date lastServiceDateTime = dateTimeFormat.parse(lastServiceDate + " " + lastServiceTime);
 
+                                                    // Csak azokat a távolságokat adjuk hozzá, amelyek az utolsó szerviz időpontja után vannak
                                                     if (rideDateTime != null && rideDateTime.after(lastServiceDateTime)) {
                                                         List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
                                                         if (partsUsed != null && partsUsed.contains(partName)) {
@@ -403,10 +406,12 @@ public class PartDetailsActivity extends AppCompatActivity {
                                                         }
                                                     }
                                                 }
-                                            } catch (ParseException e) {
-                                                Log.e("calculateTotalDistance", "Date parsing error", e);
                                             }
+
+                                        } catch (ParseException e) {
+                                            Log.e("calculateTotalDistance", "Date parsing error", e);
                                         }
+
                                         callback.onDistanceCalculated(totalDistance);
                                     }
 
@@ -425,6 +430,7 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
+
 
     // Callback interfész definiálása
     public interface DistanceCallback {
