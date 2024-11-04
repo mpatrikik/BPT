@@ -72,7 +72,7 @@
             tools:layout_editor_absoluteX="0dp">
 
             <ImageButton
-                android:id="@+id/manual_ride_adding_button"
+                android:id="@+id/add_rides_button_top"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginStart="30dp"

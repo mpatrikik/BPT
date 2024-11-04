@@ -172,17 +172,18 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
 
         // Ellenőrizzük a bejelentkezett felhasználót
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            Toast.makeText(this, "No user signed in. Redirecting to login...", Toast.LENGTH_SHORT).show();
-            Intent loginIntent = new Intent(this, LoginActivity.class);
-            startActivity(loginIntent);
-            finish();
-            return;
-        } else {
-            userId = currentUser.getUid();
-            Log.d("ManualRideAdding", "User ID: " + userId);
-            checkAndCreateUser(userId);
+        userId = getIntent().getStringExtra("userId");
+        if (userId == null) {
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser == null) {
+                Toast.makeText(this, "User not logged in. Redirecting to login...", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            } else {
+                userId = currentUser.getUid();
+            }
         }
 
         selectedBike = getIntent().getStringExtra("selected_bike_name");
