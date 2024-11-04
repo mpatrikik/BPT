@@ -327,7 +327,6 @@ public class PartDetailsActivity extends AppCompatActivity {
     }
 
     public void calculateTotalDistanceForPart(String partId, DistanceCallback callback) {
-        // Először lekérdezzük a partName-t a partId alapján
         mDatabase.child("users").child(userId).child("parts").child(partId).child("partName")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
