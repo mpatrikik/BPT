@@ -26,6 +26,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 public class PartDetailsActivity extends AppCompatActivity {
@@ -337,41 +338,82 @@ public class PartDetailsActivity extends AppCompatActivity {
                             callback.onDistanceCalculated(0);
                             return;
                         }
-
-                        // Ha sikerült lekérni a partName-t, folytatjuk a rides feldolgozásával
                         mDatabase.child("users").child(userId).child("rides")
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
                                     @Override
                                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                         double totalDistance = 0;
-                                        Log.d("calculateTotalDistance", "Fetching rides for part: " + partName);
-
                                         for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
                                             List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
-                                            Log.d("calculateTotalDistance", "Ride data: " + rideSnapshot.toString());
-                                            Log.d("calculateTotalDistance", "Selected parts in this ride: " + partsUsed);
-
                                             if (partsUsed != null && partsUsed.contains(partName)) {
                                                 String distanceStr = rideSnapshot.child("distance").getValue(String.class);
-                                                Log.d("calculateTotalDistance", "Distance for this ride: " + distanceStr);
-                                                try {
-                                                    totalDistance += Double.parseDouble(distanceStr);
-                                                    Log.d("calculateTotalDistance", "Total distance so far: " + totalDistance);
-                                                } catch (NumberFormatException e) {
-                                                    Log.e("calculateTotalDistance", "Invalid distance format: " + distanceStr);
-                                                }
-                                            } else {
-                                                Log.d("calculateTotalDistance", "Part not found in this ride's selected parts.");
+                                                totalDistance += Double.parseDouble(distanceStr);
                                             }
                                         }
-                                        Log.d("calculateTotalDistance", "Final total distance: " + totalDistance);
+                                        callback.onDistanceCalculated(totalDistance);
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                                        Log.e("calculateTotalDistance", "Failed to calculate total distance: ", databaseError.toException());
+                                        callback.onDistanceCalculated(0);
+                                    }
+                                });
+                    }
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("calculateTotalDistance", "Failed to retrieve part name: ", error.toException());
+                        callback.onDistanceCalculated(0);
+                    }
+                });
+    }
+
+    public void calculateTotalDistanceSinceDateTime(String partId, String lastServiceDate, String lastServiceTime, DistanceCallback callback) {
+        mDatabase.child("users").child(userId).child("parts").child(partId).child("partName")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        String partName = snapshot.getValue(String.class);
+                        if (partName == null) {
+                            Log.e("calculateTotalDistance", "Part name not found for partId: " + partId);
+                            callback.onDistanceCalculated(0);
+                            return;
+                        }
+
+                        mDatabase.child("users").child(userId).child("rides")
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                        double totalDistance = 0;
+                                        SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+
+                                        for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                                            String rideDate = rideSnapshot.child("date").getValue(String.class);
+                                            String rideTime = rideSnapshot.child("time").getValue(String.class);
+
+                                            try {
+                                                if (rideDate != null && rideTime != null) {
+                                                    Date rideDateTime = dateTimeFormat.parse(rideDate + " " + rideTime);
+                                                    Date lastServiceDateTime = dateTimeFormat.parse(lastServiceDate + " " + lastServiceTime);
+
+                                                    if (rideDateTime != null && rideDateTime.after(lastServiceDateTime)) {
+                                                        List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+                                                        if (partsUsed != null && partsUsed.contains(partName)) {
+                                                            String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+                                                            totalDistance += Double.parseDouble(distanceStr);
+                                                        }
+                                                    }
+                                                }
+                                            } catch (ParseException e) {
+                                                Log.e("calculateTotalDistance", "Date parsing error", e);
+                                            }
+                                        }
                                         callback.onDistanceCalculated(totalDistance);
                                     }
 
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError databaseError) {
                                         Log.e("calculateTotalDistance", "Failed to calculate total distance: ", databaseError.toException());
-                                        callback.onDistanceCalculated(0); // Callback 0, ha sikertelen
+                                        callback.onDistanceCalculated(0);
                                     }
                                 });
                     }
@@ -383,8 +425,6 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
-
-
 
     // Callback interfész definiálása
     public interface DistanceCallback {

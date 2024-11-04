@@ -18,8 +18,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
@@ -53,27 +55,51 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         DataSnapshot serviceIntervalSnapshot = serviceIntervalsList.get(position);
         String serviceIntervalName = serviceIntervalSnapshot.child("serviceInterval").child("serviceIntervalName").getValue(String.class);
         boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
+        String serviceIntervalValueKmStr = serviceIntervalSnapshot.child("serviceInterval").child("serviceIntervalValueKm").getValue(String.class);
 
         holder.serviceIntervalNameTextView.setText(serviceIntervalName != null ? serviceIntervalName : "Unknown");
 
-        if (!isRepeat) { // Csak a nem ismétlődő intervallumokra számítunk távolságot
-            String serviceIntervalValueKmStr = serviceIntervalSnapshot.child("serviceInterval").child("serviceIntervalValueKm").getValue(String.class);
-            if (serviceIntervalValueKmStr != null) {
-                int serviceIntervalValueKm = Integer.parseInt(serviceIntervalValueKmStr);
+        if (serviceIntervalValueKmStr != null) {
+            int serviceIntervalValueKm = Integer.parseInt(serviceIntervalValueKmStr);
 
-                // A PartDetailsActivity-ből kérjük az összesített távolságot
+            if (isRepeat) { // Ismétlődő intervallum
+                mDatabase.child("users").child(userId).child("parts").child(partId)
+                        .child("MAINSERVICES").child(serviceIntervalSnapshot.getKey()).child("SERVICES")
+                        .orderByChild("serviceDate").limitToLast(1) // Legutolsó szerviz dátum lekérése
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot serviceSnapshot) {
+                                String lastServiceDate = null;
+                                String lastServiceTime = null;
+                                for (DataSnapshot snapshot : serviceSnapshot.getChildren()) {
+                                    lastServiceDate = snapshot.child("serviceDate").getValue(String.class);
+                                    lastServiceTime = snapshot.child("serviceTime").getValue(String.class);
+                                }
+                                if (lastServiceDate != null && lastServiceTime != null) {
+                                    // Távolság számítása az utolsó szerviz dátuma és ideje óta
+                                    calculateDistanceSinceLastService(partId, lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
+                                } else {
+                                    holder.remainingDistanceTextView.setText("No last service date");
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError error) {
+                                Log.e("ServiceIntervalsAdapter", "Failed to get last service date: ", error.toException());
+                            }
+                        });
+            } else { // Nem ismétlődő intervallum
                 ((PartDetailsActivity) context).calculateTotalDistanceForPart(partId, totalDistance -> {
                     int remainingDistance = (int) (serviceIntervalValueKm - totalDistance);
                     if (remainingDistance < 0) remainingDistance = 0;
                     holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
                 });
-            } else {
-                holder.remainingDistanceTextView.setText("No interval distance set");
             }
         } else {
-            holder.remainingDistanceTextView.setText("000 km of 000 km left"); // vagy kezelhetjük másképp az ismétlődő intervallumokat
+            holder.remainingDistanceTextView.setText("No interval distance set");
         }
 
+        //popum menu kezelése
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
 
@@ -162,4 +188,13 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             }
         });
     }
+
+    private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+        ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
+            int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
+            if (remainingDistance < 0) remainingDistance = 0;
+            holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
+        });
+    }
+
 }
