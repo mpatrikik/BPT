@@ -385,7 +385,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                     (view12, selectedHour, selectedMinute) -> {
                         String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
                         timePickerTextView.setText(selectedTime);
-                    }, 0, 0, true);
+                    }, currentHour, currentMinute, true);
             timePickerDialog.show();
         }
     }
