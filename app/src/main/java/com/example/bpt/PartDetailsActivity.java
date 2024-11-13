@@ -39,7 +39,7 @@ public class PartDetailsActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
-    private String partName, userId;
+    private String partName, userId, partId;
     private List<String> usedBikes = new ArrayList<>();
 
     @Override
@@ -121,21 +121,24 @@ public class PartDetailsActivity extends AppCompatActivity {
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            boolean hasRepeatingServiceInterval = false;
+                            String repeatingServiceIntervalId = null;
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                partId = partSnapshot.getKey();
                                 DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
                                 for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
                                     Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
                                     if (Boolean.TRUE.equals(isRepeat)) {
-                                        hasRepeatingServiceInterval = true;
+                                        repeatingServiceIntervalId = serviceIntervalSnapshot.getKey();
                                         break;
                                     }
                                 }
-                                if (hasRepeatingServiceInterval) break;
+                                if (repeatingServiceIntervalId != null) break;
                             }
-                            if (hasRepeatingServiceInterval) {
+                            if (repeatingServiceIntervalId != null) {
                                 Intent intent = new Intent(PartDetailsActivity.this, ServiceAddingActivity.class);
                                 intent.putExtra("partName", partName);
+                                intent.putExtra("serviceIntervalId", repeatingServiceIntervalId);
+                                intent.putExtra("partId", partId);
                                 startActivity(intent);
                             } else {
                                 Toast.makeText(PartDetailsActivity.this, "No repeating service interval available.", Toast.LENGTH_SHORT).show();
@@ -273,7 +276,7 @@ public class PartDetailsActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                                String partId = partSnapshot.getKey();
+                                partId = partSnapshot.getKey();
                                 List<DataSnapshot> serviceIntervalsList = new ArrayList<>();
                                 DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
                                 for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
