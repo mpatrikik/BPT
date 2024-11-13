@@ -84,6 +84,12 @@ public class ServiceAddingActivity extends AppCompatActivity {
             }
         });
 
+        if (partId == null || serviceIntervalId == null) {
+            Toast.makeText(this, "Invalid part or service interval ID.", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
 
         serviceNameEditText = findViewById(R.id.service_name_edit_text);
         datePickerText = findViewById(R.id.date_picker);
