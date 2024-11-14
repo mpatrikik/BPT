@@ -159,7 +159,7 @@ public class PartDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        addServiceIntervalsButton.setOnClickListener(v -> { addServiceToRepeatingInterval(); });
+        addServiceIntervalsButton.setOnClickListener(v -> { checkServiceIntervalsBeforeAdding(); });
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -440,40 +440,4 @@ public class PartDetailsActivity extends AppCompatActivity {
         void onDistanceCalculated(double totalDistance);
     }
 
-
-    private void addServiceToRepeatingInterval() {
-        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        String repeatingServiceIntervalId = null;
-                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                            partId = partSnapshot.getKey();
-                            DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
-                            for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
-                                Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
-                                if (Boolean.TRUE.equals(isRepeat)) {
-                                    repeatingServiceIntervalId = serviceIntervalSnapshot.getKey();
-                                    break;
-                                }
-                            }
-                            if (repeatingServiceIntervalId != null) break;
-                        }
-                        if (repeatingServiceIntervalId != null) {
-                            Intent intent = new Intent(PartDetailsActivity.this, ServiceAddingActivity.class);
-                            intent.putExtra("partName", partName);
-                            intent.putExtra("serviceIntervalId", repeatingServiceIntervalId);
-                            intent.putExtra("partId", partId);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(PartDetailsActivity.this, "No repeating service interval available.", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.e("PartDetailsActivity", "Error checking repeating service intervals", databaseError.toException());
-                    }
-                });
-    }
 }
