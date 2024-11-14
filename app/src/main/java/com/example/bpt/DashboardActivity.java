@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -52,6 +53,15 @@ public class DashboardActivity extends AppCompatActivity {
 
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser == null) {
+            Toast.makeText(this, "User not logged in. Redirecting to login...", Toast.LENGTH_SHORT).show();
+            Intent loginIntent = new Intent(this, LoginActivity.class);
+            startActivity(loginIntent);
+            finish();
+            return;
+        }
 
         // Recycler view for bikes
         recyclerViewBikes = findViewById(R.id.recycler_view_bikes);
@@ -115,9 +125,17 @@ public class DashboardActivity extends AppCompatActivity {
         });
 
         //Manual ride adding button
-        ImageButton manualRideAddingButton = findViewById(R.id.manual_ride_adding_button);
-        manualRideAddingButton.setOnClickListener(v -> {
+        ImageButton addRidesButtonTop = findViewById(R.id.add_rides_button_top);
+        addRidesButtonTop.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            intent.putExtra("userId", mAuth.getCurrentUser().getUid());
+            startActivity(intent);
+        });
+
+        ImageButton addRidesButton = findViewById(R.id.add_rides_button);
+        addRidesButton.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ManualRideAddingActivity.class);
+            intent.putExtra("userId", mAuth.getCurrentUser().getUid());
             startActivity(intent);
         });
 
@@ -134,11 +152,6 @@ public class DashboardActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        ImageButton addRidesButton = findViewById(R.id.add_rides_button);
-        addRidesButton.setOnClickListener(v -> {
-            Intent intent = new Intent(this, ManualRideAddingActivity.class);
-            startActivity(intent);
-        });
     }
 
     private final RecyclerView.OnScrollListener scrollListener = new RecyclerView.OnScrollListener() {

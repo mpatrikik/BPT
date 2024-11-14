@@ -50,6 +50,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         return new ViewHolder(view);
     }
 
+
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DataSnapshot serviceIntervalSnapshot = serviceIntervalsList.get(position);
@@ -59,13 +60,16 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
 
         holder.serviceIntervalNameTextView.setText(serviceIntervalName != null ? serviceIntervalName : "Unknown");
 
+        // Beállítjuk a lastServiceDateTextView láthatóságát az ismétlődés alapján
+        holder.lastServiceDateTextView.setVisibility(isRepeat ? View.VISIBLE : View.GONE);
+
         if (serviceIntervalValueKmStr != null) {
             int serviceIntervalValueKm = Integer.parseInt(serviceIntervalValueKmStr);
 
             if (isRepeat) { // Ismétlődő intervallum
                 mDatabase.child("users").child(userId).child("parts").child(partId)
                         .child("MAINSERVICES").child(serviceIntervalSnapshot.getKey()).child("SERVICES")
-                        .orderByChild("serviceDate").limitToLast(1) // Legutolsó szerviz dátum lekérése
+                        .orderByChild("serviceDate").limitToLast(1)
                         .addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot serviceSnapshot) {
@@ -76,7 +80,8 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                                     lastServiceTime = snapshot.child("serviceTime").getValue(String.class);
                                 }
                                 if (lastServiceDate != null && lastServiceTime != null) {
-                                    // Távolság számítása az utolsó szerviz dátuma és ideje óta
+                                    // Dátum megjelenítése és távolság számítása
+                                    holder.lastServiceDateTextView.setText("Last serviced on " + lastServiceDate + ", at " + lastServiceTime);
                                     calculateDistanceSinceLastService(partId, lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
                                 } else {
                                     holder.remainingDistanceTextView.setText("No last service date");
@@ -99,7 +104,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             holder.remainingDistanceTextView.setText("No interval distance set");
         }
 
-        //popum menu kezelése
+        // Menükezelés
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
 
@@ -118,23 +123,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     context.startActivity(intent);
                     return true;
                 } else if (itemId == R.id.edit_service_interval) {
-                    String serviceIntervalId = serviceIntervalSnapshot.getKey(); // Meghatározzuk az aktuális intervallum ID-t
-                    mDatabase.child("users").child(userId).child("parts").child(partId)
-                            .child("MAINSERVICES").child(serviceIntervalId)
-                            .child("serviceIntervalValueKm").get().addOnCompleteListener(task -> {
-                                if (task.isSuccessful() && task.getResult() != null) {
-                                    String serviceIntervalValueKm = task.getResult().getValue(String.class);
-                                    Intent intent = new Intent(context, EditServiceIntervalActivity.class);
-                                    intent.putExtra("userId", userId);
-                                    intent.putExtra("partId", partId);
-                                    intent.putExtra("serviceIntervalId", serviceIntervalId);
-                                    intent.putExtra("serviceIntervalName", serviceIntervalName);
-                                    intent.putExtra("serviceIntervalValueKm", serviceIntervalValueKm); // Átadjuk a lekérdezett értéket
-                                    context.startActivity(intent);
-                                } else {
-                                    Toast.makeText(context, "Nem sikerült lekérni az adatokat.", Toast.LENGTH_SHORT).show();
-                                }
-                            });
+                    editServiceInterval(serviceIntervalSnapshot, serviceIntervalName);
                     return true;
                 } else if (itemId == R.id.delete_service_interval) {
                     showDeleteConfirmationDialog(serviceIntervalSnapshot.getKey(), position);
@@ -145,6 +134,27 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             });
             popupMenu.show();
         });
+    }
+
+
+    private void editServiceInterval(DataSnapshot serviceIntervalSnapshot, String serviceIntervalName) {
+        String serviceIntervalId = serviceIntervalSnapshot.getKey();
+        mDatabase.child("users").child(userId).child("parts").child(partId)
+                .child("MAINSERVICES").child(serviceIntervalId)
+                .child("serviceIntervalValueKm").get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        String serviceIntervalValueKm = task.getResult().getValue(String.class);
+                        Intent intent = new Intent(context, EditServiceIntervalActivity.class);
+                        intent.putExtra("userId", userId);
+                        intent.putExtra("partId", partId);
+                        intent.putExtra("serviceIntervalId", serviceIntervalId);
+                        intent.putExtra("serviceIntervalName", serviceIntervalName);
+                        intent.putExtra("serviceIntervalValueKm", serviceIntervalValueKm);
+                        context.startActivity(intent);
+                    } else {
+                        Toast.makeText(context, "Nem sikerült lekérni az adatokat.", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     @Override
@@ -181,25 +191,17 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                 Toast.makeText(context, "Service interval deleted", Toast.LENGTH_SHORT).show();
                 serviceIntervalsList.remove(position);
                 notifyItemRemoved(position);
-                Log.d("ServiceIntervalsAdapter", "Service interval deleted successfully");
             } else {
                 Toast.makeText(context, "Failed to delete service interval", Toast.LENGTH_SHORT).show();
-                Log.e("ServiceIntervalsAdapter", "Error deleting service interval", task.getException());
             }
         });
     }
 
     private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
-        Log.d("ServiceIntervalsAdapter", "calculateDistanceSinceLastService called");
-        Log.d("ServiceIntervalsAdapter", "lastServiceDate: " + lastServiceDate + ", lastServiceTime: " + lastServiceTime + ", serviceIntervalValueKm: " + serviceIntervalValueKm);
 
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
-            Log.d("ServiceIntervalsAdapter", "Total distance since last service: " + totalDistanceSinceLastService);
-
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
-            Log.d("ServiceIntervalsAdapter", "Remaining distance: " + remainingDistance);
-
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
         });
     }

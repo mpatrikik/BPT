@@ -39,7 +39,7 @@ public class PartDetailsActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
-    private String partName, userId;
+    private String partName, userId, partId;
     private List<String> usedBikes = new ArrayList<>();
 
     @Override
@@ -121,21 +121,24 @@ public class PartDetailsActivity extends AppCompatActivity {
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                            boolean hasRepeatingServiceInterval = false;
+                            String repeatingServiceIntervalId = null;
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                partId = partSnapshot.getKey();
                                 DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
                                 for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
                                     Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
                                     if (Boolean.TRUE.equals(isRepeat)) {
-                                        hasRepeatingServiceInterval = true;
+                                        repeatingServiceIntervalId = serviceIntervalSnapshot.getKey();
                                         break;
                                     }
                                 }
-                                if (hasRepeatingServiceInterval) break;
+                                if (repeatingServiceIntervalId != null) break;
                             }
-                            if (hasRepeatingServiceInterval) {
+                            if (repeatingServiceIntervalId != null) {
                                 Intent intent = new Intent(PartDetailsActivity.this, ServiceAddingActivity.class);
                                 intent.putExtra("partName", partName);
+                                intent.putExtra("serviceIntervalId", repeatingServiceIntervalId);
+                                intent.putExtra("partId", partId);
                                 startActivity(intent);
                             } else {
                                 Toast.makeText(PartDetailsActivity.this, "No repeating service interval available.", Toast.LENGTH_SHORT).show();
@@ -152,10 +155,11 @@ public class PartDetailsActivity extends AppCompatActivity {
         addRideButton.setOnClickListener(v -> {
             Intent intent = new Intent(this, ManualRideAddingActivity.class);
             intent.putExtra("selected_part_name", partName);
+            intent.putStringArrayListExtra("used_bikes", new ArrayList<>(usedBikes));
             startActivity(intent);
         });
 
-        addServiceIntervalsButton.setOnClickListener(v -> { checkServiceIntervalsBeforeAdding(); });
+        addServiceIntervalsButton.setOnClickListener(v -> { addServiceToRepeatingInterval(); });
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +276,7 @@ public class PartDetailsActivity extends AppCompatActivity {
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                                String partId = partSnapshot.getKey();
+                                partId = partSnapshot.getKey();
                                 List<DataSnapshot> serviceIntervalsList = new ArrayList<>();
                                 DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
                                 for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
@@ -366,10 +370,8 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
-    public void calculateTotalDistanceSinceDateTime(String partId, String lastServiceDate, String lastServiceTime, DistanceCallback callback) {
-        Log.d("PartDetailsActivity", "calculateTotalDistanceSinceDateTime called");
-        Log.d("PartDetailsActivity", "lastServiceDate: " + lastServiceDate + ", lastServiceTime: " + lastServiceTime);
 
+    public void calculateTotalDistanceSinceDateTime(String partId, String lastServiceDate, String lastServiceTime, DistanceCallback callback) {
         mDatabase.child("users").child(userId).child("parts").child(partId).child("partName")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -380,7 +382,6 @@ public class PartDetailsActivity extends AppCompatActivity {
                             callback.onDistanceCalculated(0);
                             return;
                         }
-                        Log.d("PartDetailsActivity", "Part name: " + partName);
 
                         mDatabase.child("users").child(userId).child("rides")
                                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -391,7 +392,6 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                                         try {
                                             Date lastServiceDateTime = dateTimeFormat.parse(lastServiceDate + " " + lastServiceTime);
-                                            Log.d("PartDetailsActivity", "Parsed lastServiceDateTime: " + lastServiceDateTime);
 
                                             for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
                                                 String rideDate = rideSnapshot.child("date").getValue(String.class);
@@ -399,25 +399,15 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                                                 if (rideDate != null && rideTime != null) {
                                                     Date rideDateTime = dateTimeFormat.parse(rideDate + " " + rideTime);
-                                                    Log.d("PartDetailsActivity", "Ride dateTime: " + rideDateTime);
-                                                    Log.d("PartDetailsActivity", "Comparing rideDateTime with lastServiceDateTime");
-
                                                     if (rideDateTime != null && rideDateTime.after(lastServiceDateTime)) {
-                                                        Log.d("PartDetailsActivity", "Ride is after last service date");
-
                                                         List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
-                                                        Log.d("PartDetailsActivity", "Parts used in this ride: " + partsUsed);
 
                                                         if (partsUsed != null && partsUsed.contains(partName)) {
                                                             String distanceStr = rideSnapshot.child("distance").getValue(String.class);
-                                                            Log.d("PartDetailsActivity", "Ride distance: " + distanceStr);
-
                                                             try {
                                                                 double rideDistance = Double.parseDouble(distanceStr);
                                                                 totalDistance += rideDistance;
-                                                                Log.d("PartDetailsActivity", "Updated totalDistance: " + totalDistance);
                                                             } catch (NumberFormatException e) {
-                                                                Log.e("PartDetailsActivity", "Invalid distance format: " + distanceStr, e);
                                                             }
                                                         }
                                                     } else {
@@ -428,14 +418,11 @@ public class PartDetailsActivity extends AppCompatActivity {
                                         } catch (ParseException e) {
                                             Log.e("PartDetailsActivity", "Date parsing error", e);
                                         }
-
-                                        Log.d("PartDetailsActivity", "Total distance since last service: " + totalDistance);
                                         callback.onDistanceCalculated(totalDistance);
                                     }
 
                                     @Override
                                     public void onCancelled(@NonNull DatabaseError databaseError) {
-                                        Log.e("PartDetailsActivity", "Failed to calculate total distance: ", databaseError.toException());
                                         callback.onDistanceCalculated(0);
                                     }
                                 });
@@ -443,17 +430,50 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
-                        Log.e("PartDetailsActivity", "Failed to retrieve part name: ", error.toException());
                         callback.onDistanceCalculated(0);
                     }
                 });
     }
-
-
 
     // Callback interfész definiálása
     public interface DistanceCallback {
         void onDistanceCalculated(double totalDistance);
     }
 
+
+    private void addServiceToRepeatingInterval() {
+        mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        String repeatingServiceIntervalId = null;
+                        for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                            partId = partSnapshot.getKey();
+                            DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                            for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
+                                Boolean isRepeat = serviceIntervalSnapshot.child("serviceInterval").child("isRepeat").getValue(Boolean.class);
+                                if (Boolean.TRUE.equals(isRepeat)) {
+                                    repeatingServiceIntervalId = serviceIntervalSnapshot.getKey();
+                                    break;
+                                }
+                            }
+                            if (repeatingServiceIntervalId != null) break;
+                        }
+                        if (repeatingServiceIntervalId != null) {
+                            Intent intent = new Intent(PartDetailsActivity.this, ServiceAddingActivity.class);
+                            intent.putExtra("partName", partName);
+                            intent.putExtra("serviceIntervalId", repeatingServiceIntervalId);
+                            intent.putExtra("partId", partId);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(PartDetailsActivity.this, "No repeating service interval available.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Error checking repeating service intervals", databaseError.toException());
+                    }
+                });
+    }
 }

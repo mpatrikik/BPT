@@ -64,19 +64,61 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
         Spinner bicycleSpinner = findViewById(R.id.bicycle_spinner);
         bicycleList = new ArrayList<>();
-
         selectedPartsTextView = findViewById(R.id.select_parts);
         partList = new ArrayList<>();
-
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, bicycleList);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         bicycleSpinner.setAdapter(adapter);
-
         datePickerTextView = findViewById(R.id.date_picker);
         timePickerTextView = findViewById(R.id.time_picker);
-
         ImageButton submitButton = findViewById(R.id.manual_ride_adding_button_submit);
         submitButton.setOnClickListener(v -> saveRide());
+
+        String selectedPartName = getIntent().getStringExtra("selected_part_name");
+        ArrayList<String> usedBikes = getIntent().getStringArrayListExtra("used_bikes");
+        // Populate bicycle spinner with used bikes if provided
+        if (usedBikes != null && !usedBikes.isEmpty()) {
+            bicycleList.addAll(usedBikes);
+            adapter.notifyDataSetChanged();
+            if (!usedBikes.isEmpty()) {
+                bicycleSpinner.setSelection(0); // Select the first bike by default
+            }
+        } else {
+            loadBicycles(); // Load all bicycles if no used bikes are provided
+        }
+
+        // Load parts and preselect the specified part, if provided
+        if (selectedPartName != null) {
+            loadPartsForBicycle(bicycleList.get(0), selectedPartName);
+        } else {
+            loadPartsForBicycle(bicycleList.get(0), null); // Load parts without preselection if no part name provided
+        }
+        // Spinner event handler for selecting a bicycle
+        bicycleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedBicycle = bicycleList.get(position);
+                if ("Add new bicycle".equals(selectedBicycle)) {
+                    showAddBicycleDialog();
+                } else {
+                    loadPartsForBicycle(selectedBicycle, selectedPartName); // Reload parts when bicycle changes
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                // No action needed
+            }
+        });
+
+        selectedPartsTextView.setOnClickListener(v -> {
+            if (!partList.isEmpty()) {
+                showPartsSelectionDialog();
+            } else {
+                Toast.makeText(ManualRideAddingActivity.this, "No parts available for this bicycle.", Toast.LENGTH_SHORT).show();
+            }
+        });
+
 
         EditText distanceEditText = findViewById(R.id.ridden_distance_input);
         // Add TextWatcher to restrict distance input
@@ -130,17 +172,18 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
 
         // Ellenőrizzük a bejelentkezett felhasználót
-        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            Toast.makeText(this, "No user signed in. Redirecting to login...", Toast.LENGTH_SHORT).show();
-            Intent loginIntent = new Intent(this, LoginActivity.class);
-            startActivity(loginIntent);
-            finish();
-            return;
-        } else {
-            userId = currentUser.getUid();
-            Log.d("ManualRideAdding", "User ID: " + userId);
-            checkAndCreateUser(userId);
+        userId = getIntent().getStringExtra("userId");
+        if (userId == null) {
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser == null) {
+                Toast.makeText(this, "User not logged in. Redirecting to login...", Toast.LENGTH_SHORT).show();
+                Intent loginIntent = new Intent(this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+                return;
+            } else {
+                userId = currentUser.getUid();
+            }
         }
 
         selectedBike = getIntent().getStringExtra("selected_bike_name");
@@ -163,7 +206,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                 if ("Add new bicycle".equals(selectedBicycle)) {
                     showAddBicycleDialog();
                 } else {
-                    loadPartsForBicycle(selectedBicycle);
+                    loadPartsForBicycle(selectedBicycle, selectedPartName);
                 }
             }
 
@@ -183,9 +226,9 @@ public class ManualRideAddingActivity extends AppCompatActivity {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private void loadPartsForBicycle(String selectedBicycle) {
+    private void loadPartsForBicycle(String selectedBicycle, String selectedPartName) {
         if (userId == null || selectedBicycle == null) {
-            Toast.makeText(this, "Felhasználó ID vagy kerékpár hiányzik. Nem lehet betölteni az alkatrészeket.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "User ID or bicycle is missing. Cannot load parts.", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -194,23 +237,37 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         partList.clear();
+                        int preselectIndex = -1;
+
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                             String partName = snapshot.child("partName").getValue(String.class);
                             partList.add(partName);
+
+                            // If this part matches the selectedPartName, mark it for preselection
+                            if (selectedPartName != null && selectedPartName.equals(partName)) {
+                                preselectIndex = partList.size() - 1;
+                            }
                         }
 
                         if (partList.isEmpty()) {
-                            Toast.makeText(ManualRideAddingActivity.this, "No parts available for this bicycle..", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManualRideAddingActivity.this, "No parts available for this bicycle.", Toast.LENGTH_SHORT).show();
                         } else {
-                            // A többválasztásos lista beállítása
                             selectedParts = new boolean[partList.size()];
+                            if (preselectIndex != -1) {
+                                // Preselect the specified part
+                                selectedParts[preselectIndex] = true;
+                                selectedPartsIndexes.add(preselectIndex);
+
+                                // Display selected part in TextView
+                                selectedPartsTextView.setText(partList.get(preselectIndex));
+                            }
                         }
                     }
 
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
-                        Log.e("ManualRideAddingActivity", "Nem sikerült betölteni az alkatrészeket: ", databaseError.toException());
-                        Toast.makeText(ManualRideAddingActivity.this, "Hiba történt az alkatrészek betöltésekor.", Toast.LENGTH_SHORT).show();
+                        Log.e("ManualRideAddingActivity", "Failed to load parts: ", databaseError.toException());
+                        Toast.makeText(ManualRideAddingActivity.this, "Error loading parts.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -389,7 +446,6 @@ public class ManualRideAddingActivity extends AppCompatActivity {
             timePickerDialog.show();
         }
     }
-
 
     private void saveRide() {
         String selectedBicycle = ((Spinner) findViewById(R.id.bicycle_spinner)).getSelectedItem().toString();
