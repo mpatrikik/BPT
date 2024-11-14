@@ -1,7 +1,11 @@
 package com.example.bpt;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +17,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,6 +37,8 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     private List<DataSnapshot> serviceIntervalsList;
     private String partId, userId;
     private DatabaseReference mDatabase;
+    private boolean hasNotified20Percent = false;
+    private boolean hasNotifiedZero = false;
 
     public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId) {
         this.context = context;
@@ -40,8 +48,23 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         if (currentUser != null) {
             this.userId = currentUser.getUid();
         }
-        this.mDatabase = FirebaseDatabase.getInstance().getReference(); // Adatbázis referencia definiálása
+        this.mDatabase = FirebaseDatabase.getInstance().getReference();
+        createNotificationChannel();
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "SERVICE_NOTIFICATION_CHANNEL",
+                    "Service Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Notifications for Service Intervals");
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
     @NonNull
     @Override
@@ -199,12 +222,40 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     }
 
     private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
-
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
+
+            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !hasNotified20Percent) {
+                sendNotification("Service interval approaching limit", "The service interval for part " + partId + " is close to reaching its limit.");
+                hasNotified20Percent = true;
+            }
+
+            if (remainingDistance == 0 && !hasNotifiedZero) {
+                sendNotification("Service interval reached", "The service interval for part " + partId + " has been reached.");
+                hasNotifiedZero = true;
+            }
         });
+    }
+
+    private void sendNotification(String title, String message) {
+        // Ellenőrizzük, hogy Android 13 vagy újabb van-e, és van-e engedély
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                // Engedély kérésére van szükség
+                Toast.makeText(context, "Notification permission required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "SERVICE_NOTIFICATION_CHANNEL")
+                .setSmallIcon(android.R.drawable.ic_dialog_info) // Ideiglenes ikon
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
 
