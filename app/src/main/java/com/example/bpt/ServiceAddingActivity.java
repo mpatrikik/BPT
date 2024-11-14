@@ -52,6 +52,9 @@ public class ServiceAddingActivity extends AppCompatActivity {
         serviceIntervalId = getIntent().getStringExtra("serviceIntervalId");
         partId = getIntent().getStringExtra("partId");
 
+        Log.d("ServiceAddingActivity", "Received serviceIntervalId: " + serviceIntervalId);
+        Log.d("ServiceAddingActivity", "Received partId: " + partId);
+
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             userId = currentUser.getUid();
@@ -62,28 +65,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
         }
 
         partName = getIntent().getStringExtra("partName");
-
-        DatabaseReference partsRef = FirebaseDatabase.getInstance().getReference()
-                .child("users").child(userId).child("parts");
-        partsRef.orderByChild("partName").equalTo(partName).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
-                        partId = partSnapshot.getKey();
-                        DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
-                        for (DataSnapshot serviceIntervalSnapshot : mainServicesSnapshot.getChildren()) {
-                            serviceIntervalId = serviceIntervalSnapshot.getKey();
-                        }
-                    }
-                }
-            }
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Log.e("ServiceAddingActivity", "Error finding partId", databaseError.toException());
-            }
-        });
-
 
         serviceNameEditText = findViewById(R.id.service_name_edit_text);
         datePickerText = findViewById(R.id.date_picker);
@@ -97,8 +78,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
         backButton.setOnClickListener(v -> finish());
 
         submitServiceButton.setOnClickListener(v -> saveService());
-
-
         datePickerText.setOnClickListener(v -> showDatePicker());
         timePickerText.setOnClickListener(v -> showTimePicker());
 
@@ -123,7 +102,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
         public void afterTextChanged(Editable s) {}
     };
 
-    // Check if all inputs are filled
     private boolean checkInputs() {
         String serviceName = serviceNameEditText.getText().toString().trim();
         String date = datePickerText.getText().toString().trim();
@@ -177,23 +155,31 @@ public class ServiceAddingActivity extends AppCompatActivity {
     }
 
     private void saveService() {
-        String serviceName = serviceNameEditText.getText().toString().trim();
-        String dateToSave = datePickerText.getText().toString().trim();
-        String timeToSave = timePickerText.getText().toString().trim();
+        mDatabase.child("users").child(userId).child("parts").child(partId).child("MAINSERVICES").child(serviceIntervalId)
+                .child("serviceInterval").child("isRepeat")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        if (Boolean.TRUE.equals(snapshot.getValue(Boolean.class))) {
+                            DatabaseReference serviceRef = mDatabase.child("users").child(userId)
+                                    .child("parts").child(partId).child("MAINSERVICES").child(serviceIntervalId)
+                                    .child("SERVICES").push();
+                            serviceRef.child("serviceName").setValue(serviceNameEditText.getText().toString().trim());
+                            serviceRef.child("serviceDate").setValue(datePickerText.getText().toString().trim());
+                            serviceRef.child("serviceTime").setValue(timePickerText.getText().toString().trim())
+                                    .addOnCompleteListener(task -> {
+                                        Toast.makeText(ServiceAddingActivity.this, task.isSuccessful() ? "Service added successfully" : "Failed to add service", Toast.LENGTH_SHORT).show();
+                                        if (task.isSuccessful()) finish();
+                                    });
+                        } else {
+                            Toast.makeText(ServiceAddingActivity.this, "Cannot add service to non-repeating interval", Toast.LENGTH_SHORT).show();
+                        }
+                    }
 
-        DatabaseReference serviceRef = mDatabase.child("users").child(userId)
-                .child("parts").child(partId).child("MAINSERVICES").child(serviceIntervalId)
-                .child("SERVICES").push();
-
-        serviceRef.child("serviceName").setValue(serviceName);
-        serviceRef.child("serviceDate").setValue(dateToSave);
-        serviceRef.child("serviceTime").setValue(timeToSave).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                Toast.makeText(ServiceAddingActivity.this, "Service added successfully", Toast.LENGTH_SHORT).show();
-                finish();
-            } else {
-                Toast.makeText(ServiceAddingActivity.this, "Failed to add service", Toast.LENGTH_SHORT).show();
-            }
-        });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e("ServiceAddingActivity", "Failed to verify interval type", error.toException());
+                    }
+                });
     }
 }
