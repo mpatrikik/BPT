@@ -136,7 +136,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         });
     }
 
-
+    // EditServiceInterval funkció elkülönítése az olvashatóság érdekében
     private void editServiceInterval(DataSnapshot serviceIntervalSnapshot, String serviceIntervalName) {
         String serviceIntervalId = serviceIntervalSnapshot.getKey();
         mDatabase.child("users").child(userId).child("parts").child(partId)
@@ -156,6 +156,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                     }
                 });
     }
+
 
     @Override
     public int getItemCount() { return serviceIntervalsList.size(); }
