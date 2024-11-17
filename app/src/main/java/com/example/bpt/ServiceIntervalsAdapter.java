@@ -29,7 +29,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceIntervalsAdapter.ViewHolder> {
 
@@ -37,8 +39,9 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     private List<DataSnapshot> serviceIntervalsList;
     private String partId, partName, userId;
     private DatabaseReference mDatabase;
-    private boolean hasNotified20Percent = false;
-    private boolean hasNotifiedZero = false;
+    private Map<String, Boolean> notified20PercentMap = new HashMap<>();
+    private Map<String, Boolean> notifiedZeroMap = new HashMap<>();
+
 
     public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId, String partName) {
         this.context = context;
@@ -106,7 +109,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                                 if (lastServiceDate != null && lastServiceTime != null) {
                                     // Dátum megjelenítése és távolság számítása
                                     holder.lastServiceDateTextView.setText("Last serviced on " + lastServiceDate + ", at " + lastServiceTime);
-                                    calculateDistanceSinceLastService(partId, lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
+                                    calculateDistanceSinceLastService(partId, serviceIntervalSnapshot.getKey(), lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
                                 } else {
                                     holder.remainingDistanceTextView.setText("No last service date");
                                 }
@@ -222,27 +225,28 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         });
     }
 
-    private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+    private void calculateDistanceSinceLastService(String partId, String intervalKey, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+        String uniqueKey = partId + "_" + intervalKey; // Egyedi kulcs
+
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
 
-            //String partName = holder.serviceIntervalNameTextView.getText().toString();
-
-            //20%-os értesítés
-            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !hasNotified20Percent) {
-                sendNotification("Check your components!", "The " + partName + " needs a service soon!");
-                hasNotified20Percent = true;
+            // Ellenőrzés, hogy a 20%-os értesítés már elküldésre került-e
+            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !notified20PercentMap.getOrDefault(uniqueKey, false)) {
+                sendNotification("Your part needs service soon", "The " + partName + " needs a service soon!");
+                notified20PercentMap.put(uniqueKey, true);
             }
 
-            //Szervizelni kéne az alkatrészt
-            if (remainingDistance == 0 && !hasNotifiedZero) {
+            // Ellenőrzés, hogy a 0 km-es értesítés már elküldésre került-e
+            if (remainingDistance == 0 && !notifiedZeroMap.getOrDefault(uniqueKey, false)) {
                 sendNotification("Service required now", "The " + partName + " needs a service now for best performance and longest life!");
-                hasNotifiedZero = true;
+                notifiedZeroMap.put(uniqueKey, true);
             }
         });
     }
+
 
     private void sendNotification(String title, String message) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
