@@ -35,15 +35,16 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
 
     private Context context;
     private List<DataSnapshot> serviceIntervalsList;
-    private String partId, userId;
+    private String partId, partName, userId;
     private DatabaseReference mDatabase;
     private boolean hasNotified20Percent = false;
     private boolean hasNotifiedZero = false;
 
-    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId) {
+    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId, String partName) {
         this.context = context;
         this.serviceIntervalsList = serviceIntervalsList;
         this.partId = partId;
+        this.partName = partName;
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             this.userId = currentUser.getUid();
@@ -227,29 +228,31 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             if (remainingDistance < 0) remainingDistance = 0;
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
 
+            //String partName = holder.serviceIntervalNameTextView.getText().toString();
+
+            //20%-os értesítés
             if (remainingDistance <= serviceIntervalValueKm * 0.2 && !hasNotified20Percent) {
-                sendNotification("Service interval approaching limit", "The service interval for part " + partId + " is close to reaching its limit.");
+                sendNotification("Check your components!", "The " + partName + " needs a service soon!");
                 hasNotified20Percent = true;
             }
 
+            //Szervizelni kéne az alkatrészt
             if (remainingDistance == 0 && !hasNotifiedZero) {
-                sendNotification("Service interval reached", "The service interval for part " + partId + " has been reached.");
+                sendNotification("Service required now", "The " + partName + " needs a service now for best performance and longest life!");
                 hasNotifiedZero = true;
             }
         });
     }
 
     private void sendNotification(String title, String message) {
-        // Ellenőrizzük, hogy Android 13 vagy újabb van-e, és van-e engedély
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                // Engedély kérésére van szükség
                 Toast.makeText(context, "Notification permission required", Toast.LENGTH_SHORT).show();
                 return;
             }
         }
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "SERVICE_NOTIFICATION_CHANNEL")
-                .setSmallIcon(android.R.drawable.ic_dialog_info) // Ideiglenes ikon
+                .setSmallIcon(R.drawable.repeat_logo)
                 .setContentTitle(title)
                 .setContentText(message)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)

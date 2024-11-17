@@ -156,7 +156,6 @@ public class PartDetailsActivity extends AppCompatActivity {
         }
     }
 
-
     private void fetchRepeatingServiceIntervalIdAndNavigate() {
         mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -306,7 +305,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                                 // Az adapter létrehozása a partId átadásával
                                 recyclerViewServiceIntervals.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
-                                ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList, partId);
+                                ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList, partId, partName);
                                 recyclerViewServiceIntervals.setAdapter(adapter);
                             }
                         }
