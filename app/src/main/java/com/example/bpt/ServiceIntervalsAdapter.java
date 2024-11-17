@@ -39,8 +39,8 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     private List<DataSnapshot> serviceIntervalsList;
     private String partId, partName, userId;
     private DatabaseReference mDatabase;
-    private Map<String, Boolean> notified20PercentMap = new HashMap<>();
-    private Map<String, Boolean> notifiedZeroMap = new HashMap<>();
+    private static final Map<String, Boolean> notified20Percent = new HashMap<>();
+    private static final Map<String, Boolean> notifiedZero = new HashMap<>();
 
 
     public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId, String partName) {
@@ -234,15 +234,15 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
 
             // Ellenőrzés, hogy a 20%-os értesítés már elküldésre került-e
-            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !notified20PercentMap.getOrDefault(uniqueKey, false)) {
+            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !notified20Percent.getOrDefault(uniqueKey, false)) {
                 sendNotification("Your part needs service soon", "The " + partName + " needs a service soon!");
-                notified20PercentMap.put(uniqueKey, true);
+                notified20Percent.put(uniqueKey, true);
             }
 
             // Ellenőrzés, hogy a 0 km-es értesítés már elküldésre került-e
-            if (remainingDistance == 0 && !notifiedZeroMap.getOrDefault(uniqueKey, false)) {
+            if (remainingDistance == 0 && !notifiedZero.getOrDefault(uniqueKey, false)) {
                 sendNotification("Service required now", "The " + partName + " needs a service now for best performance and longest life!");
-                notifiedZeroMap.put(uniqueKey, true);
+                notifiedZero.put(uniqueKey, true);
             }
         });
     }
