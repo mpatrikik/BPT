@@ -1,6 +1,8 @@
 package com.example.bpt;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ImageButton;
@@ -128,10 +130,31 @@ public class PartDetailsActivity extends AppCompatActivity {
 
         addServiceIntervalsButton.setOnClickListener(v -> { checkServiceIntervalsBeforeAdding(); });
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, NOTIFICATION_PERMISSION_REQUEST_CODE);
+            }
+        }
+
 
     }
 
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    private static final int NOTIFICATION_PERMISSION_REQUEST_CODE = 100;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Notification permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
 
     private void fetchRepeatingServiceIntervalIdAndNavigate() {
         mDatabase.child("users").child(userId).child("parts").orderByChild("partName").equalTo(partName)
@@ -282,7 +305,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
                                 // Az adapter létrehozása a partId átadásával
                                 recyclerViewServiceIntervals.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
-                                ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList, partId);
+                                ServiceIntervalsAdapter adapter = new ServiceIntervalsAdapter(PartDetailsActivity.this, serviceIntervalsList, partId, partName);
                                 recyclerViewServiceIntervals.setAdapter(adapter);
                             }
                         }

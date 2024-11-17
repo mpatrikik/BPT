@@ -1,7 +1,11 @@
 package com.example.bpt;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,6 +17,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -23,25 +29,46 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceIntervalsAdapter.ViewHolder> {
 
     private Context context;
     private List<DataSnapshot> serviceIntervalsList;
-    private String partId, userId;
+    private String partId, partName, userId;
     private DatabaseReference mDatabase;
+    private static final Map<String, Boolean> notified20Percent = new HashMap<>();
+    private static final Map<String, Boolean> notifiedZero = new HashMap<>();
 
-    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId) {
+
+    public ServiceIntervalsAdapter(Context context, List<DataSnapshot> serviceIntervalsList, String partId, String partName) {
         this.context = context;
         this.serviceIntervalsList = serviceIntervalsList;
         this.partId = partId;
+        this.partName = partName;
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser != null) {
             this.userId = currentUser.getUid();
         }
-        this.mDatabase = FirebaseDatabase.getInstance().getReference(); // Adatbázis referencia definiálása
+        this.mDatabase = FirebaseDatabase.getInstance().getReference();
+        createNotificationChannel();
     }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "SERVICE_NOTIFICATION_CHANNEL",
+                    "Service Notifications",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("Notifications for Service Intervals");
+            NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
 
     @NonNull
     @Override
@@ -82,7 +109,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                                 if (lastServiceDate != null && lastServiceTime != null) {
                                     // Dátum megjelenítése és távolság számítása
                                     holder.lastServiceDateTextView.setText("Last serviced on " + lastServiceDate + ", at " + lastServiceTime);
-                                    calculateDistanceSinceLastService(partId, lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
+                                    calculateDistanceSinceLastService(partId, serviceIntervalSnapshot.getKey(), lastServiceDate, lastServiceTime, serviceIntervalValueKm, holder);
                                 } else {
                                     holder.remainingDistanceTextView.setText("No last service date");
                                 }
@@ -198,13 +225,44 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         });
     }
 
-    private void calculateDistanceSinceLastService(String partId, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+    private void calculateDistanceSinceLastService(String partId, String intervalKey, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
+        String uniqueKey = partId + "_" + intervalKey; // Egyedi kulcs
 
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
+
+            // Ellenőrzés, hogy a 20%-os értesítés már elküldésre került-e
+            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !notified20Percent.getOrDefault(uniqueKey, false)) {
+                sendNotification("Your part needs service soon", "The " + partName + " needs a service soon!");
+                notified20Percent.put(uniqueKey, true);
+            }
+
+            // Ellenőrzés, hogy a 0 km-es értesítés már elküldésre került-e
+            if (remainingDistance == 0 && !notifiedZero.getOrDefault(uniqueKey, false)) {
+                sendNotification("Service required now", "The " + partName + " needs a service now for best performance and longest life!");
+                notifiedZero.put(uniqueKey, true);
+            }
         });
+    }
+
+
+    private void sendNotification(String title, String message) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(context, "Notification permission required", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "SERVICE_NOTIFICATION_CHANNEL")
+                .setSmallIcon(R.drawable.repeat_logo)
+                .setContentTitle(title)
+                .setContentText(message)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify((int) System.currentTimeMillis(), builder.build());
     }
 
 
