@@ -21,12 +21,13 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
     private Context context;
     private List<DataSnapshot> serviceList;
-    private String partId;
+    private String partId, partName;
 
-    public ServiceAdapter(Context context, List<DataSnapshot> serviceList, String partId) {
+    public ServiceAdapter(Context context, List<DataSnapshot> serviceList, String partId, String partName) {
         this.context = context;
         this.serviceList = serviceList;
         this.partId = partId;
+        this.partName = partName;
     }
 
     @NonNull
@@ -49,7 +50,7 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
         holder.serviceDateTextView.setText(serviceDate != null ? serviceDate : "No Date");
         holder.overallAddedKmTextView.setText(overallAddedKm != null ? overallAddedKm : "0 km");
 
-        // Handling more button menu
+        // Handling more button popup menu
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
             popupMenu.getMenuInflater().inflate(R.menu.popup_menu_service, popupMenu.getMenu());
@@ -77,7 +78,7 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
     @Override
     public int getItemCount() {
-        return serviceList.size();
+        return serviceList != null ? serviceList.size() : 0;
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {

@@ -76,6 +76,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         partName = getIntent().getStringExtra("part_name");
         if (partName != null) {
             partNameTextView.setText(partName);
+            loadServicesForPart(partName);
             loadServiceIntervalsForPart(partName);
         } else {
             Toast.makeText(this, "Error: No part name provided", Toast.LENGTH_SHORT).show();
@@ -83,6 +84,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         }
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadServicesForPart(partName);
             loadServiceIntervalsForPart(partName);
             loadRidesForPart(partName);
             loadBikesForPart(partName);
@@ -97,7 +99,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
         loadBikesForPart(partName);
         calculateTotalDistanceForPart(partName);
-        loadServicesForPart(partId);
+        loadServicesForPart(partName);
         loadServiceIntervalsForPart(partName);
         loadRidesForPart(partName);
 
@@ -289,20 +291,29 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
-    private void loadServicesForPart(String partId) {
-        mDatabase.child("users").child(userId).child("parts").child(partId).child("SERVICES")
-                .addListenerForSingleValueEvent(new ValueEventListener() {
+    private void loadServicesForPart(String partName) {
+        mDatabase.child("users").child(userId).child("parts")
+                .orderByChild("partName").equalTo(partName)
+                .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        List<DataSnapshot> serviceList = new ArrayList<>();
-                        for (DataSnapshot serviceSnapshot : dataSnapshot.getChildren()) {
-                            serviceList.add(serviceSnapshot);
-                        }
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                String partId = partSnapshot.getKey();
+                                List<DataSnapshot> serviceList = new ArrayList<>();
+                                DataSnapshot servicesSnapshot = partSnapshot.child("SERVICES");
+                                for (DataSnapshot serviceSnapshot : servicesSnapshot.getChildren()) {
+                                    serviceList.add(serviceSnapshot);
+                                }
 
-                        // Setting up the ServiceAdapter
-                        recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
-                        ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId);
-                        recyclerViewServices.setAdapter(adapter);
+                                // Az adapter létrehozása a partId átadásával
+                                recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                                ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId, partName);
+                                recyclerViewServices.setAdapter(adapter);
+                            }
+                        } else {
+                            Log.w("PartDetailsActivity", "No services found for partName: " + partName);
+                        }
                     }
 
                     @Override
@@ -311,6 +322,8 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
+
+
 
 
     private void loadServiceIntervalsForPart(String partName) {
