@@ -226,23 +226,22 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
     }
 
     private void calculateDistanceSinceLastService(String partId, String intervalKey, String lastServiceDate, String lastServiceTime, int serviceIntervalValueKm, ViewHolder holder) {
-        String uniqueKey = partId + "_" + intervalKey; // Egyedi kulcs
+        String uniqueKey = partId + "_" + intervalKey;
 
         ((PartDetailsActivity) context).calculateTotalDistanceSinceDateTime(partId, lastServiceDate, lastServiceTime, totalDistanceSinceLastService -> {
             int remainingDistance = (int) (serviceIntervalValueKm - totalDistanceSinceLastService);
             if (remainingDistance < 0) remainingDistance = 0;
             holder.remainingDistanceTextView.setText(remainingDistance + " km of " + serviceIntervalValueKm + " km left");
 
-            // Ellenőrzés, hogy a 20%-os értesítés már elküldésre került-e
-            if (remainingDistance <= serviceIntervalValueKm * 0.2 && !notified20Percent.getOrDefault(uniqueKey, false)) {
-                sendNotification("Your part needs service soon", "The " + partName + " needs a service soon!");
-                notified20Percent.put(uniqueKey, true);
-            }
 
-            // Ellenőrzés, hogy a 0 km-es értesítés már elküldésre került-e
             if (remainingDistance == 0 && !notifiedZero.getOrDefault(uniqueKey, false)) {
                 sendNotification("Service required now", "The " + partName + " needs a service now for best performance and longest life!");
                 notifiedZero.put(uniqueKey, true);
+            }
+
+            if (remainingDistance <= serviceIntervalValueKm * 0.2 && remainingDistance > 0 && !notified20Percent.getOrDefault(uniqueKey, false) && !notifiedZero.getOrDefault(uniqueKey, false)) {
+                sendNotification("Your part needs service soon", "The " + partName + " needs a service soon!");
+                notified20Percent.put(uniqueKey, true);
             }
         });
     }
