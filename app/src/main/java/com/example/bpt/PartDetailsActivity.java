@@ -97,6 +97,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
         loadBikesForPart(partName);
         calculateTotalDistanceForPart(partName);
+        loadServicesForPart(partId);
         loadServiceIntervalsForPart(partName);
         loadRidesForPart(partName);
 
@@ -287,6 +288,30 @@ public class PartDetailsActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    private void loadServicesForPart(String partId) {
+        mDatabase.child("users").child(userId).child("parts").child(partId).child("SERVICES")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        List<DataSnapshot> serviceList = new ArrayList<>();
+                        for (DataSnapshot serviceSnapshot : dataSnapshot.getChildren()) {
+                            serviceList.add(serviceSnapshot);
+                        }
+
+                        // Setting up the ServiceAdapter
+                        recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                        ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId);
+                        recyclerViewServices.setAdapter(adapter);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to load services: ", databaseError.toException());
+                    }
+                });
+    }
+
 
     private void loadServiceIntervalsForPart(String partName) {
         mDatabase.child("users").child(userId).child("parts")
