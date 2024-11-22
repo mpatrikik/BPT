@@ -76,6 +76,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         partName = getIntent().getStringExtra("part_name");
         if (partName != null) {
             partNameTextView.setText(partName);
+            loadServicesForPart(partName);
             loadServiceIntervalsForPart(partName);
         } else {
             Toast.makeText(this, "Error: No part name provided", Toast.LENGTH_SHORT).show();
@@ -83,6 +84,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         }
 
         swipeRefreshLayout.setOnRefreshListener(() -> {
+            loadServicesForPart(partName);
             loadServiceIntervalsForPart(partName);
             loadRidesForPart(partName);
             loadBikesForPart(partName);
@@ -97,6 +99,7 @@ public class PartDetailsActivity extends AppCompatActivity {
 
         loadBikesForPart(partName);
         calculateTotalDistanceForPart(partName);
+        loadServicesForPart(partName);
         loadServiceIntervalsForPart(partName);
         loadRidesForPart(partName);
 
@@ -284,6 +287,44 @@ public class PartDetailsActivity extends AppCompatActivity {
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         Log.e("PartDetailsActivity", "Failed to delete bike: ", databaseError.toException());
+                    }
+                });
+    }
+
+    private void loadServicesForPart(String partName) {
+        mDatabase.child("users").child(userId).child("parts")
+                .orderByChild("partName").equalTo(partName)
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
+                                String partId = partSnapshot.getKey();
+                                Log.d("PartDetailsActivity", "Part ID: " + partId);
+                                List<DataSnapshot> serviceList = new ArrayList<>();
+
+                                DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                                for (DataSnapshot mainService : mainServicesSnapshot.getChildren()) {
+                                    DataSnapshot servicesSnapshot = mainService.child("SERVICES");
+                                    for (DataSnapshot serviceSnapshot : servicesSnapshot.getChildren()) {
+                                        serviceList.add(serviceSnapshot);
+                                    }
+                                }
+                                Log.d("PartDetailsActivity", "Services found: " + serviceList.size());
+
+                                // Az adapter létrehozása a partId átadásával
+                                recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                                ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId, partName);
+                                recyclerViewServices.setAdapter(adapter);
+                            }
+                        } else {
+                            Log.w("PartDetailsActivity", "No services found for partName: " + partName);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        Log.e("PartDetailsActivity", "Failed to load services: ", databaseError.toException());
                     }
                 });
     }
