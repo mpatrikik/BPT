@@ -15,7 +15,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.firebase.database.DataSnapshot;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHolder> {
 
@@ -28,6 +34,30 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
         this.serviceList = serviceList;
         this.partId = partId;
         this.partName = partName;
+
+        sortServicesByDateAndTime();
+    }
+
+    private void sortServicesByDateAndTime() {
+        Collections.sort(serviceList, new Comparator<DataSnapshot>() {
+            @Override
+            public int compare(DataSnapshot o1, DataSnapshot o2) {
+                String date1 = o1.child("serviceDate").getValue(String.class);
+                String time1 = o1.child("serviceTime").getValue(String.class);
+                String date2 = o2.child("serviceDate").getValue(String.class);
+                String time2 = o2.child("serviceTime").getValue(String.class);
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+                try {
+                    Date dateTime1 = sdf.parse(date1 + " " + time1);
+                    Date dateTime2 = sdf.parse(date2 + " " + time2);
+                    return dateTime2.compareTo(dateTime1);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                return 0;
+            }
+        });
     }
 
     @NonNull
@@ -43,12 +73,21 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
         String serviceName = serviceSnapshot.child("serviceName").getValue(String.class);
         String serviceDate = serviceSnapshot.child("serviceDate").getValue(String.class);
-        String overallAddedKm = serviceSnapshot.child("overallAddedKm").getValue(String.class);
+        String serviceTime = serviceSnapshot.child("serviceTime").getValue(String.class);
 
-        // Setting values in the views
+        //Alap értékek az adatoknak
         holder.serviceNameTextView.setText(serviceName != null ? serviceName : "Unknown Service");
-        holder.serviceDateTextView.setText(serviceDate != null ? serviceDate : "No Date");
-        holder.overallAddedKmTextView.setText(overallAddedKm != null ? overallAddedKm : "0 km");
+        String dateTimeDisplaying = (serviceDate != null ? serviceDate : "No date") +  (", at") + (serviceTime != null ? " " + serviceTime : "");
+        holder.serviceDateTextView.setText(dateTimeDisplaying);
+        holder.overallAddedKmTextView.setText("Loading...");
+
+        // Távolság kiszámítása az adott szerviz dátumáig
+        if (context instanceof PartDetailsActivity) {
+            PartDetailsActivity activity = (PartDetailsActivity) context;
+            activity.calculateTotalDistanceSinceDateTime(partId, serviceDate, serviceTime, totalDistance -> {
+                holder.overallAddedKmTextView.setText(String.format("%.1f km", totalDistance));
+            });
+        }
 
         // Handling more button popup menu
         holder.moreButton.setOnClickListener(v -> {
@@ -69,6 +108,10 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
             popupMenu.show();
         });
+
+
+
+
     }
 
     private void deleteService(String serviceId, int position) {

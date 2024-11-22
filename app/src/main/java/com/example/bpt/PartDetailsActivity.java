@@ -329,9 +329,6 @@ public class PartDetailsActivity extends AppCompatActivity {
                 });
     }
 
-
-
-
     private void loadServiceIntervalsForPart(String partName) {
         mDatabase.child("users").child(userId).child("parts")
                 .orderByChild("partName").equalTo(partName)
