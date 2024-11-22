@@ -300,11 +300,17 @@ public class PartDetailsActivity extends AppCompatActivity {
                         if (dataSnapshot.exists()) {
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
                                 String partId = partSnapshot.getKey();
+                                Log.d("PartDetailsActivity", "Part ID: " + partId);
                                 List<DataSnapshot> serviceList = new ArrayList<>();
-                                DataSnapshot servicesSnapshot = partSnapshot.child("SERVICES");
-                                for (DataSnapshot serviceSnapshot : servicesSnapshot.getChildren()) {
-                                    serviceList.add(serviceSnapshot);
+
+                                DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+                                for (DataSnapshot mainService : mainServicesSnapshot.getChildren()) {
+                                    DataSnapshot servicesSnapshot = mainService.child("SERVICES");
+                                    for (DataSnapshot serviceSnapshot : servicesSnapshot.getChildren()) {
+                                        serviceList.add(serviceSnapshot);
+                                    }
                                 }
+                                Log.d("PartDetailsActivity", "Services found: " + serviceList.size());
 
                                 // Az adapter létrehozása a partId átadásával
                                 recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));

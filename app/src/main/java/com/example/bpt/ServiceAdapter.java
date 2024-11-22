@@ -72,7 +72,7 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
     }
 
     private void deleteService(String serviceId, int position) {
-        // Logic to delete the service from Firebase
+        // Logic to delete the service
         Toast.makeText(context, "Delete logic for service ID: " + serviceId, Toast.LENGTH_SHORT).show();
     }
 
