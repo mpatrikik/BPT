@@ -10,10 +10,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,14 +33,19 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
     private Context context;
     private List<DataSnapshot> serviceList;
-    private String partId, partName;
+    private String partId, partName, userId;
     private final Map<String, Double> cachedDistances = new HashMap<>();
+    private DatabaseReference mDatabase;
 
     public ServiceAdapter(Context context, List<DataSnapshot> serviceList, String partId, String partName) {
         this.context = context;
         this.serviceList = serviceList;
         this.partId = partId;
         this.partName = partName;
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        this.userId = auth.getCurrentUser().getUid();
+        this.mDatabase = FirebaseDatabase.getInstance().getReference();
 
         sortServicesByDateAndTime();
     }
@@ -84,7 +93,6 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
         String dateTimeDisplaying = (serviceDate != null ? serviceDate : "No date") +  (", at") + (serviceTime != null ? " " + serviceTime : "");
         holder.serviceDateTextView.setText(dateTimeDisplaying);
 
-        //double totalDistanceUntilNow = 0;
 
         if (cachedDistances.containsKey(serviceId)) {
             // Ha a távolság már ki van számolva, használjuk a cache-t
@@ -95,19 +103,16 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
                 PartDetailsActivity activity = (PartDetailsActivity) context;
                 activity.calculateTotalDistanceSinceDateTime(partId, serviceDate, serviceTime, totalDistance -> {
                     if (position == serviceList.size() - 1) {
-                        // Csak a legutolsó szervizhez adjuk hozzá az új távolságot
                         cachedDistances.put(serviceId, totalDistance);
                     } else if (!cachedDistances.containsKey(serviceId)) {
-                        // Ha nem az utolsó szerviz, akkor csak egyszer számoljuk ki
                         cachedDistances.put(serviceId, totalDistance);
                     }
-                    // UI frissítése
                     holder.overallAddedKmTextView.setText(String.format("%.1f km", cachedDistances.get(serviceId)));
                 });
             }
         }
 
-        // Handling more button popup menu
+        // Handling popup menu
         holder.moreButton.setOnClickListener(v -> {
             PopupMenu popupMenu = new PopupMenu(context, holder.moreButton);
             popupMenu.getMenuInflater().inflate(R.menu.popup_menu_service, popupMenu.getMenu());
@@ -118,7 +123,8 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
                     Toast.makeText(context, "Edit logic for service ID: " + serviceSnapshot.getKey(), Toast.LENGTH_SHORT).show();
                     return true;
                 } else if (itemId == R.id.delete_service) {
-                    Toast.makeText(context, "Delete logic for service ID: " + serviceSnapshot.getKey(), Toast.LENGTH_SHORT).show();
+                    // Törlés megerősítő párbeszédablak
+                    showDeleteConfirmationDialog(serviceSnapshot, position);
                     return true;
                 }
                 return false;
@@ -132,9 +138,31 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
     }
 
-    private void deleteService(String serviceId, int position) {
-        // Logic to delete the service
-        Toast.makeText(context, "Delete logic for service ID: " + serviceId, Toast.LENGTH_SHORT).show();
+    private void showDeleteConfirmationDialog(DataSnapshot serviceSnapshot, int position) {
+        new AlertDialog.Builder(context)
+                .setTitle("Delete Service")
+                .setMessage("Are you sure you want to delete this service?")
+                .setPositiveButton("Yes", (dialog, which) -> deleteService(serviceSnapshot, position))
+                .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
+                .show();
+    }
+
+    private void deleteService(DataSnapshot serviceSnapshot, int position) {
+        String mainServiceId = serviceSnapshot.getRef().getParent().getParent().getKey();
+        String serviceId = serviceSnapshot.getKey();
+
+        // Firebase adatbázis törlése
+        mDatabase.child("users").child(userId).child("parts").child(partId)
+                .child("MAINSERVICES").child(mainServiceId).child("SERVICES").child(serviceId)
+                .removeValue()
+                .addOnSuccessListener(aVoid -> {
+                    // RecyclerView frissítése
+                    serviceList.remove(position);
+                    notifyItemRemoved(position);
+                    notifyItemRangeChanged(position, serviceList.size());
+                    Toast.makeText(context, "Service deleted successfully", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> Toast.makeText(context, "Failed to delete service: " + e.getMessage(), Toast.LENGTH_SHORT).show());
     }
 
     @Override
