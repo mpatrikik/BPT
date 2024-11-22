@@ -248,11 +248,28 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     android:scrollbars="none"/>
 
+                <TextView
+                    android:id="@+id/no_services_textview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginBottom="30dp"
+                    android:text="No service yet for this component"
+                    android:gravity="center"
+                    android:fontFamily="@font/averagesans_regular"
+                    android:textStyle="bold"
+                    android:visibility="visible"
+                    android:textSize="20sp"
+                    android:textColor="@color/black"
+                    app:layout_constraintTop_toBottomOf="@id/services_text_button_layout"
+                    app:layout_constraintBottom_toTopOf="@+id/horizontal_line2"
+                     />
+
                 <View
                     android:id="@+id/horizontal_line2"
                     android:layout_width="0dp"
                     android:layout_height="2dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="30dp"
                     android:background="#808080"
                     app:layout_constraintTop_toBottomOf="@id/recycler_view_services"
                     app:layout_constraintBottom_toTopOf="@id/rides_text_button_layout"

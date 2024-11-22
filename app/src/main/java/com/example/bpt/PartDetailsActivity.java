@@ -5,6 +5,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.Locale;
 public class PartDetailsActivity extends AppCompatActivity {
 
-    private TextView partNameTextView, usedBikeTextView, partTotalDistanceTextView;
+    private TextView partNameTextView, usedBikeTextView, partTotalDistanceTextView, noServicesTextView;
     private ImageButton addServiceIntervalsButton, addServiceButton, addRideButton;
     private RecyclerView recyclerViewServiceIntervals , recyclerViewServices, recyclerViewRides;
     private RideAdapter adapterRides;
@@ -52,6 +53,7 @@ public class PartDetailsActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
 
+        noServicesTextView = findViewById(R.id.no_services_textview);
         partNameTextView = findViewById(R.id.part_name_text_view);
         usedBikeTextView = findViewById(R.id.used_bike_forcurrentpart_text_view);
         partTotalDistanceTextView = findViewById(R.id.part_totaldistance_text_view);
@@ -298,33 +300,45 @@ public class PartDetailsActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
+                            List<DataSnapshot> serviceList = new ArrayList<>();
+
                             for (DataSnapshot partSnapshot : dataSnapshot.getChildren()) {
                                 String partId = partSnapshot.getKey();
-                                Log.d("PartDetailsActivity", "Part ID: " + partId);
-                                List<DataSnapshot> serviceList = new ArrayList<>();
-
                                 DataSnapshot mainServicesSnapshot = partSnapshot.child("MAINSERVICES");
+
                                 for (DataSnapshot mainService : mainServicesSnapshot.getChildren()) {
                                     DataSnapshot servicesSnapshot = mainService.child("SERVICES");
                                     for (DataSnapshot serviceSnapshot : servicesSnapshot.getChildren()) {
                                         serviceList.add(serviceSnapshot);
                                     }
                                 }
-                                Log.d("PartDetailsActivity", "Services found: " + serviceList.size());
 
-                                // Az adapter létrehozása a partId átadásával
-                                recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
-                                ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId, partName);
-                                recyclerViewServices.setAdapter(adapter);
+                                if (!serviceList.isEmpty()) {
+                                    // Szervizek vannak, RecyclerView megjelenítése
+                                    noServicesTextView.setVisibility(View.GONE);
+                                    recyclerViewServices.setVisibility(View.VISIBLE);
+
+                                    // Adapter inicializálása
+                                    recyclerViewServices.setLayoutManager(new LinearLayoutManager(PartDetailsActivity.this));
+                                    ServiceAdapter adapter = new ServiceAdapter(PartDetailsActivity.this, serviceList, partId, partName);
+                                    recyclerViewServices.setAdapter(adapter);
+                                } else {
+                                    // Nincs szerviz, üzenet megjelenítése
+                                    noServicesTextView.setVisibility(View.VISIBLE);
+                                    recyclerViewServices.setVisibility(View.GONE);
+                                }
                             }
                         } else {
-                            Log.w("PartDetailsActivity", "No services found for partName: " + partName);
+                            // Az alkatrésznek nincs kapcsolódó szervize
+                            noServicesTextView.setVisibility(View.VISIBLE);
+                            recyclerViewServices.setVisibility(View.GONE);
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError databaseError) {
                         Log.e("PartDetailsActivity", "Failed to load services: ", databaseError.toException());
+                        Toast.makeText(PartDetailsActivity.this, "Failed to load services", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
