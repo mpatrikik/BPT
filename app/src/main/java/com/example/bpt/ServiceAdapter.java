@@ -20,14 +20,17 @@ import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHolder> {
 
     private Context context;
     private List<DataSnapshot> serviceList;
     private String partId, partName;
+    private final Map<String, Double> cachedDistances = new HashMap<>();
 
     public ServiceAdapter(Context context, List<DataSnapshot> serviceList, String partId, String partName) {
         this.context = context;
@@ -71,6 +74,7 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         DataSnapshot serviceSnapshot = serviceList.get(position);
 
+        String serviceId = serviceSnapshot.getKey();
         String serviceName = serviceSnapshot.child("serviceName").getValue(String.class);
         String serviceDate = serviceSnapshot.child("serviceDate").getValue(String.class);
         String serviceTime = serviceSnapshot.child("serviceTime").getValue(String.class);
@@ -79,14 +83,28 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
         holder.serviceNameTextView.setText(serviceName != null ? serviceName : "Unknown Service");
         String dateTimeDisplaying = (serviceDate != null ? serviceDate : "No date") +  (", at") + (serviceTime != null ? " " + serviceTime : "");
         holder.serviceDateTextView.setText(dateTimeDisplaying);
-        holder.overallAddedKmTextView.setText("Loading...");
 
-        // Távolság kiszámítása az adott szerviz dátumáig
-        if (context instanceof PartDetailsActivity) {
-            PartDetailsActivity activity = (PartDetailsActivity) context;
-            activity.calculateTotalDistanceSinceDateTime(partId, serviceDate, serviceTime, totalDistance -> {
-                holder.overallAddedKmTextView.setText(String.format("%.1f km", totalDistance));
-            });
+        //double totalDistanceUntilNow = 0;
+
+        if (cachedDistances.containsKey(serviceId)) {
+            // Ha a távolság már ki van számolva, használjuk a cache-t
+            holder.overallAddedKmTextView.setText(String.format("%.1f km", cachedDistances.get(serviceId)));
+        } else {
+            holder.overallAddedKmTextView.setText("Loading...");
+            if (context instanceof PartDetailsActivity) {
+                PartDetailsActivity activity = (PartDetailsActivity) context;
+                activity.calculateTotalDistanceSinceDateTime(partId, serviceDate, serviceTime, totalDistance -> {
+                    if (position == serviceList.size() - 1) {
+                        // Csak a legutolsó szervizhez adjuk hozzá az új távolságot
+                        cachedDistances.put(serviceId, totalDistance);
+                    } else if (!cachedDistances.containsKey(serviceId)) {
+                        // Ha nem az utolsó szerviz, akkor csak egyszer számoljuk ki
+                        cachedDistances.put(serviceId, totalDistance);
+                    }
+                    // UI frissítése
+                    holder.overallAddedKmTextView.setText(String.format("%.1f km", cachedDistances.get(serviceId)));
+                });
+            }
         }
 
         // Handling more button popup menu
