@@ -104,10 +104,10 @@ public class EditServiceIntervalActivity extends AppCompatActivity {
             if (isValueChanged) {
                 databaseReference.child("serviceIntervalValueKm").setValue(newServiceIntervalValueKm);
             }
-            Toast.makeText(this, "A változások sikeresen mentve!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Changes saved!", Toast.LENGTH_SHORT).show();
             finish();
         } else {
-            Toast.makeText(this, "Nincs változás a mentéshez.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "No changes for saving.", Toast.LENGTH_SHORT).show();
         }
     }
 

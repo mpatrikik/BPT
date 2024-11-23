@@ -146,7 +146,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                             distanceEditText.setText(input.substring(1));
                             distanceEditText.setSelection(input.length() - 1);
                             isManualChange = false;
-                            Toast.makeText(ManualRideAddingActivity.this, "A tizedesvessző előtt számot kell megadni!", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ManualRideAddingActivity.this, "Please enter valid numbers!", Toast.LENGTH_SHORT).show();
                         } else {
                             isDecimalAdded = true; // Az első tizedesvesszőt elfogadjuk
                         }
@@ -159,7 +159,7 @@ public class ManualRideAddingActivity extends AppCompatActivity {
                     distanceEditText.setText(input.substring(0, input.length() - 1));
                     distanceEditText.setSelection(input.length() - 1);
                     isManualChange = false;
-                    Toast.makeText(ManualRideAddingActivity.this, "Csak egy tizedesvessző lehet!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ManualRideAddingActivity.this, "Please enter valid numbers!", Toast.LENGTH_SHORT).show();
                 }
 
                 // Ha az input üres, alaphelyzetbe állítjuk a tizedest
