@@ -28,6 +28,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 
 public class ServiceAddingActivity extends AppCompatActivity {
@@ -123,6 +124,9 @@ public class ServiceAddingActivity extends AppCompatActivity {
                 (view1, selectedYear, selectedMonth, selectedDay) -> {
                     String selectedDate = selectedYear + "/" + (selectedMonth + 1) + "/" + selectedDay;
                     datePickerText.setText(selectedDate);
+
+                    // Validálás az idővel együtt
+                    validateDateTime(selectedDate, timePickerText.getText().toString());
                     checkInputs();
                 }, year, month, day);
         datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
@@ -134,25 +138,39 @@ public class ServiceAddingActivity extends AppCompatActivity {
         int currentHour = calendar.get(Calendar.HOUR_OF_DAY);
         int currentMinute = calendar.get(Calendar.MINUTE);
 
-        String selectedDate = datePickerText.getText().toString();
-
         TimePickerDialog timePickerDialog = new TimePickerDialog(this,
                 (view, selectedHour, selectedMinute) -> {
                     String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
-                    if (selectedDate.equals(new SimpleDateFormat("yyyy/MM/dd", Locale.getDefault()).format(calendar.getTime()))) {
-                        Calendar selectedTimeCal = Calendar.getInstance();
-                        selectedTimeCal.set(Calendar.HOUR_OF_DAY, selectedHour);
-                        selectedTimeCal.set(Calendar.MINUTE, selectedMinute);
-                        if (selectedTimeCal.after(calendar)) {
-                            Toast.makeText(this, "Please select current or past time", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                    }
                     timePickerText.setText(selectedTime);
+
+                    // Validálás a dátummal együtt
+                    validateDateTime(datePickerText.getText().toString(), selectedTime);
                     checkInputs();
                 }, currentHour, currentMinute, true);
         timePickerDialog.show();
     }
+
+    private void validateDateTime(String selectedDate, String selectedTime) {
+        if (selectedDate.isEmpty() || selectedTime.isEmpty()) {
+            return; // Ha nincs megadva mindkettő, nem validálunk
+        }
+
+        final Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+
+        try {
+            Date currentDate = calendar.getTime();
+            Date selectedDateTime = dateFormat.parse(selectedDate + " " + selectedTime);
+
+            if (selectedDateTime != null && selectedDateTime.after(currentDate)) {
+                Toast.makeText(this, "Please select a current or past date and time.", Toast.LENGTH_SHORT).show();
+                timePickerText.setText(""); // Reseteli az időt, ha nem valid
+            }
+        } catch (Exception e) {
+            Log.e("ServiceAddingActivity", "Error parsing date/time: " + e.getMessage());
+        }
+    }
+
 
     private void saveService() {
         mDatabase.child("users").child(userId).child("parts").child(partId).child("MAINSERVICES").child(serviceIntervalId)
