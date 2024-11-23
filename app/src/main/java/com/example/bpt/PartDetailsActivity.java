@@ -515,4 +515,73 @@ public class PartDetailsActivity extends AppCompatActivity {
         void onDistanceCalculated(double totalDistance);
     }
 
+
+    public void calculateDistanceBetweenServices(
+            String partId,
+            String previousServiceDate,
+            String previousServiceTime,
+            String currentServiceDate,
+            String currentServiceTime,
+            PartDetailsActivity.DistanceCallback callback) {
+
+        // Ellenőrizze, hogy az előző szerviz dátuma elérhető-e
+        boolean isFirstService = (previousServiceDate == null || previousServiceTime == null);
+
+        mDatabase.child("users").child(userId).child("rides")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        double totalDistance = 0;
+                        SimpleDateFormat dateTimeFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault());
+
+                        try {
+                            // Az aktuális szerviz dátumát és időpontját összefűzzük
+                            Date currentServiceDateTime = dateTimeFormat.parse(currentServiceDate + " " + currentServiceTime);
+                            Date previousServiceDateTime = null;
+
+                            // Csak ha nem az első szerviz, állítsuk be az előző szerviz dátumát
+                            if (!isFirstService) {
+                                previousServiceDateTime = dateTimeFormat.parse(previousServiceDate + " " + previousServiceTime);
+                            }
+
+                            // Ride-ok átnézése
+                            for (DataSnapshot rideSnapshot : dataSnapshot.getChildren()) {
+                                String rideDate = rideSnapshot.child("date").getValue(String.class);
+                                String rideTime = rideSnapshot.child("time").getValue(String.class);
+                                List<String> partsUsed = (List<String>) rideSnapshot.child("selectedParts").getValue();
+
+                                if (rideDate != null && rideTime != null && partsUsed != null && partsUsed.contains(partName)) {
+                                    // Ride dátum/idő konvertálása
+                                    Date rideDateTime = dateTimeFormat.parse(rideDate + " " + rideTime);
+
+                                    // Ellenőrizzük, hogy az aktuális ride a megfelelő időintervallumban van-e
+                                    if ((isFirstService || rideDateTime.after(previousServiceDateTime)) &&
+                                            rideDateTime.before(currentServiceDateTime)) {
+                                        String distanceStr = rideSnapshot.child("distance").getValue(String.class);
+
+                                        try {
+                                            // Ride távolság hozzáadása
+                                            totalDistance += Double.parseDouble(distanceStr);
+                                        } catch (NumberFormatException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
+                            }
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                        }
+
+                        // Visszaadjuk a kiszámított távolságot a callbacken keresztül
+                        callback.onDistanceCalculated(totalDistance);
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+                        callback.onDistanceCalculated(0);
+                    }
+                });
+    }
+
+
 }

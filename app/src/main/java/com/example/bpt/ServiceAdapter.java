@@ -88,29 +88,35 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
         String serviceDate = serviceSnapshot.child("serviceDate").getValue(String.class);
         String serviceTime = serviceSnapshot.child("serviceTime").getValue(String.class);
 
-        //Alap értékek az adatoknak
+        // Alap értékek az adatoknak
         holder.serviceNameTextView.setText(serviceName != null ? serviceName : "Unknown Service");
-        String dateTimeDisplaying = (serviceDate != null ? serviceDate : "No date") +  (", at") + (serviceTime != null ? " " + serviceTime : "");
+        String dateTimeDisplaying = (serviceDate != null ? serviceDate : "No date") + (", at") + (serviceTime != null ? " " + serviceTime : "");
         holder.serviceDateTextView.setText(dateTimeDisplaying);
 
-
+        // Távolság kiszámítása az adott szerviz időtartamára
         if (cachedDistances.containsKey(serviceId)) {
-            // Ha a távolság már ki van számolva, használjuk a cache-t
             holder.overallAddedKmTextView.setText(String.format("%.1f km", cachedDistances.get(serviceId)));
         } else {
             holder.overallAddedKmTextView.setText("Loading...");
             if (context instanceof PartDetailsActivity) {
                 PartDetailsActivity activity = (PartDetailsActivity) context;
-                activity.calculateTotalDistanceSinceDateTime(partId, serviceDate, serviceTime, totalDistance -> {
-                    if (position == serviceList.size() - 1) {
-                        cachedDistances.put(serviceId, totalDistance);
-                    } else if (!cachedDistances.containsKey(serviceId)) {
-                        cachedDistances.put(serviceId, totalDistance);
-                    }
-                    holder.overallAddedKmTextView.setText(String.format("%.1f km", cachedDistances.get(serviceId)));
+                String previousServiceDate = null;
+                String previousServiceTime = null;
+
+                // Az előző szerviz adatai
+                if (position < serviceList.size() - 1) {
+                    DataSnapshot previousServiceSnapshot = serviceList.get(position + 1);
+                    previousServiceDate = previousServiceSnapshot.child("serviceDate").getValue(String.class);
+                    previousServiceTime = previousServiceSnapshot.child("serviceTime").getValue(String.class);
+                }
+
+                activity.calculateDistanceBetweenServices(partId, previousServiceDate, previousServiceTime, serviceDate, serviceTime, totalDistance -> {
+                    cachedDistances.put(serviceId, totalDistance);
+                    holder.overallAddedKmTextView.setText(String.format("%.1f km", totalDistance));
                 });
             }
         }
+
 
         // Handling popup menu
         holder.moreButton.setOnClickListener(v -> {
@@ -132,6 +138,8 @@ public class ServiceAdapter extends RecyclerView.Adapter<ServiceAdapter.ViewHold
 
             popupMenu.show();
         });
+
+
 
 
 
