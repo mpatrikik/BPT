@@ -143,7 +143,6 @@ public class ServiceAddingActivity extends AppCompatActivity {
                     String selectedTime = selectedHour + ":" + String.format("%02d", selectedMinute);
                     timePickerText.setText(selectedTime);
 
-                    // Validálás a dátummal együtt
                     validateDateTime(datePickerText.getText().toString(), selectedTime);
                     checkInputs();
                 }, currentHour, currentMinute, true);
@@ -152,7 +151,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
 
     private void validateDateTime(String selectedDate, String selectedTime) {
         if (selectedDate.isEmpty() || selectedTime.isEmpty()) {
-            return; // Ha nincs megadva mindkettő, nem validálunk
+            return;
         }
 
         final Calendar calendar = Calendar.getInstance();
@@ -164,7 +163,7 @@ public class ServiceAddingActivity extends AppCompatActivity {
 
             if (selectedDateTime != null && selectedDateTime.after(currentDate)) {
                 Toast.makeText(this, "Please select a current or past date and time.", Toast.LENGTH_SHORT).show();
-                timePickerText.setText(""); // Reseteli az időt, ha nem valid
+                timePickerText.setText("");
             }
         } catch (Exception e) {
             Log.e("ServiceAddingActivity", "Error parsing date/time: " + e.getMessage());

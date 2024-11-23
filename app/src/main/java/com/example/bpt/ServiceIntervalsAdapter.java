@@ -163,8 +163,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
         });
     }
 
-    // EditServiceInterval funkció elkülönítése az olvashatóság érdekében
-    private void editServiceInterval(DataSnapshot serviceIntervalSnapshot, String serviceIntervalName) {
+        private void editServiceInterval(DataSnapshot serviceIntervalSnapshot, String serviceIntervalName) {
         String serviceIntervalId = serviceIntervalSnapshot.getKey();
         mDatabase.child("users").child(userId).child("parts").child(partId)
                 .child("MAINSERVICES").child(serviceIntervalId)
@@ -179,7 +178,7 @@ public class ServiceIntervalsAdapter extends RecyclerView.Adapter<ServiceInterva
                         intent.putExtra("serviceIntervalValueKm", serviceIntervalValueKm);
                         context.startActivity(intent);
                     } else {
-                        Toast.makeText(context, "Nem sikerült lekérni az adatokat.", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "The data could not be retrieved.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
